@@ -1,0 +1,45 @@
+#ifndef TERRAIN_H
+#define TERRAIN_H
+
+#include <glad/glad.h> // include glad to get all the required OpenGL headers
+
+#include <string>
+#include <fstream>
+#include <sstream>
+#include <iostream>
+
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
+
+#include <glad/glad.h> 
+#include <GLFW/glfw3.h>
+#include <iostream>
+
+#include "shader.h"
+#include "triangles.h"
+#include "element.h"
+#include "camera.h"
+
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/random.hpp>
+
+class terrain_geometry : public triangle_geometry
+{
+public:
+	terrain_geometry(std::string terrain_file, int decimation);
+};
+
+class terrain_tile : public element
+{
+private:
+	std::unique_ptr<terrain_geometry> geometry;
+public:
+	terrain_tile(std::string terrain_file, int decimation);
+
+	void draw(glm::mat4x4 parent_world, Camera& camera);
+};
+
+#endif
