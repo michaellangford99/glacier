@@ -3,8 +3,8 @@
 
 terrain_geometry::terrain_geometry(std::string terrain_file, int decimation)
 {
-	int raw_width = 3601;
-	int raw_height = 3601;
+	int raw_width = TERRAIN_WIDTH_ELEMENTS;
+	int raw_height = TERRAIN_HEIGHT_ELEMENTS;
 
 	int width = raw_width / decimation;
 	int height = raw_height / decimation;
@@ -14,14 +14,12 @@ terrain_geometry::terrain_geometry(std::string terrain_file, int decimation)
 
 	std::ifstream input = std::ifstream(terrain_file, std::ios::binary);
 
-	float degrees_per_tile = 1.0f;
-	float meters_per_degree = 111111.0f;
-	float resolution_meters_w = meters_per_degree / width;
-	float resolution_meters_h = meters_per_degree / height;
+	float resolution_meters_w = TERRAIN_DEGREES_PER_TILE * TERRAIN_METERS_PER_DEGREE / width;
+	float resolution_meters_h = TERRAIN_DEGREES_PER_TILE * TERRAIN_METERS_PER_DEGREE / height;
 
 	uint16_t min_height = 65535;
 
-	float meters_per_unit = 1000.0f;
+	float meters_per_unit = TERRAIN_METERS_PER_UNIT;
 
 	for (int i = 0; i < height; i++)
 	{
@@ -97,12 +95,16 @@ terrain_geometry::terrain_geometry(std::string terrain_file, int decimation)
 
 //=============================================
 
-terrain_tile::terrain_tile(std::string terrain_file, int decimation)//TODO add location
+terrain_tile::terrain_tile(std::string terrain_file, int decimation, glm::vec3 lat_long_elev)//TODO add location
 {
 	geometry = std::unique_ptr<terrain_geometry>(new terrain_geometry(terrain_file, decimation));
 	heightmap = std::unique_ptr<texture>(new texture(terrain_file, 3601, 3601, 1, 2, GL_RED, GL_R32F, GL_SHORT, true));
 	terrain_shader = std::unique_ptr<Shader>(new Shader("vertex.glsl", "terrain.glsl"));
 	terrain_shader->generate_uniform_table();
+
+	position = glm::vec3(lat_long_elev.x*TERRAIN_METERS_PER_DEGREE / TERRAIN_METERS_PER_UNIT,
+						 lat_long_elev.y*TERRAIN_METERS_PER_DEGREE / TERRAIN_METERS_PER_UNIT,
+						 lat_long_elev.z);
 }
 
 void terrain_tile::draw(glm::mat4x4 parent_world, Camera& camera)
@@ -121,7 +123,7 @@ void terrain_tile::draw(glm::mat4x4 parent_world, Camera& camera)
 	//afterwards reset those that are supposed to be set internally
 	terrain_shader->set_imgui_uniforms();
 
-	glUniformMatrix4fv(glGetUniformLocation(terrain_shader->ID, "model"), 1, GL_FALSE, glm::value_ptr(world));
+	glUniformMatrix4fv(glGetUniformLocation(terrain_shader->ID, "model"), 1, GL_FALSE, glm::value_ptr(parent_world * world));
 	glUniformMatrix4fv(glGetUniformLocation(terrain_shader->ID, "view"), 1, GL_FALSE, glm::value_ptr(view));
 	glUniformMatrix4fv(glGetUniformLocation(terrain_shader->ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 

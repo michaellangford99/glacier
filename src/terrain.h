@@ -27,6 +27,12 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/random.hpp>
 
+#define TERRAIN_DEGREES_PER_TILE 1.0f
+#define TERRAIN_METERS_PER_DEGREE 111111.0f
+#define TERRAIN_WIDTH_ELEMENTS 3601
+#define TERRAIN_HEIGHT_ELEMENTS 3601
+#define TERRAIN_METERS_PER_UNIT 1000.0f
+
 class terrain_geometry : public triangle_geometry
 {
 public:
@@ -40,7 +46,7 @@ private:
 	std::unique_ptr<texture> heightmap;
 	std::unique_ptr<Shader> terrain_shader;
 public:
-	terrain_tile(std::string terrain_file, int decimation);
+	terrain_tile(std::string terrain_file, int decimation, glm::vec3 lat_long_elev);
 
 	void draw(glm::mat4x4 parent_world, Camera& camera);
 };

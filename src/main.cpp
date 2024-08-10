@@ -208,8 +208,9 @@ int main()
 
 	triangle_geometry fullscreen_quad = triangle_geometry(plane_vertices, plane_indices);
 
-	terrain_geometry test = terrain_geometry("N32W111.hgt", 4);
-	texture test_texture = texture("N32W111.hgt", 3601, 3601, 1, 2, GL_RED, GL_R32F, GL_SHORT, true);
+	terrain_tile test_tile = terrain_tile("N32W111.hgt", 4, glm::vec3(0,0,0));
+	terrain_tile test_tile2 = terrain_tile("N34W119.hgt", 4, glm::vec3(-1.0f,0,0));
+
 	//texture test_texture = texture("content/container.jpg");
 	//setup imgui
 	setup_imgui(window);
@@ -229,7 +230,7 @@ int main()
 		glGetIntegerv(GL_VIEWPORT, viewport_size);
 		camera.update_view_projection();
 
-		bool draw_terrain = true;
+		bool draw_terrain = false;
 		if (draw_terrain)
 		{
 			//bind / apply shader?
@@ -274,6 +275,12 @@ int main()
 			//fullscreen_quad_draw();
 			test.draw();
 		}
+
+		test_tile.update();
+		test_tile.draw(glm::mat4(1.0), camera);
+
+		test_tile2.update();
+		test_tile2.draw(glm::mat4(1.0), camera);
 
 		bool draw_fullscreen_shader = false;
 		if (draw_fullscreen_shader)

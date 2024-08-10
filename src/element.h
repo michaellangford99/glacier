@@ -29,8 +29,8 @@ class element
 public:
 	std::vector<std::shared_ptr<element>> children;
 
-	glm::vec3 position;
-	glm::vec3 rotation;
+	glm::vec3 position = glm::vec3(0,0,0);
+	glm::vec3 rotation = glm::vec3(0,0,0);
 	
 	glm::mat4x4 world;
 
