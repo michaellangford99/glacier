@@ -97,12 +97,48 @@ terrain_geometry::terrain_geometry(std::string terrain_file, int decimation)
 
 //=============================================
 
-terrain_tile::terrain_tile(std::string terrain_file, int decimation)
+terrain_tile::terrain_tile(std::string terrain_file, int decimation)//TODO add location
 {
 	geometry = std::unique_ptr<terrain_geometry>(new terrain_geometry(terrain_file, decimation));
+	heightmap = std::unique_ptr<texture>(new texture(terrain_file, 3601, 3601, 1, 2, GL_RED, GL_R32F, GL_SHORT, true));
+	terrain_shader = std::unique_ptr<Shader>(new Shader("vertex.glsl", "terrain.glsl"));
+	terrain_shader->generate_uniform_table();
 }
 
 void terrain_tile::draw(glm::mat4x4 parent_world, Camera& camera)
 {
+	// FIX THIS:::
+	// also, is any of this abstractable??
+	// like should there be an intermediate type of 'shaded_element' that implements the matrix assignements to the shader?
 
+	terrain_shader->use();
+
+	//update view and pull view matrix out
+	glm::mat4& view = camera.view;
+	glm::mat4& projection = camera.projection;
+
+	//set auto-edited uniforms.
+	//afterwards reset those that are supposed to be set internally
+	terrain_shader->set_imgui_uniforms();
+
+	glUniformMatrix4fv(glGetUniformLocation(terrain_shader->ID, "model"), 1, GL_FALSE, glm::value_ptr(world));
+	glUniformMatrix4fv(glGetUniformLocation(terrain_shader->ID, "view"), 1, GL_FALSE, glm::value_ptr(view));
+	glUniformMatrix4fv(glGetUniformLocation(terrain_shader->ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+
+	glUniformMatrix4fv(glGetUniformLocation(terrain_shader->ID, "inv_view_projection"), 1, GL_FALSE, glm::value_ptr(glm::inverse(projection * view)));
+	glUniform3f(glGetUniformLocation(terrain_shader->ID, "camera_position"), camera.position.x, camera.position.y, camera.position.z);
+	//glUniform1f(glGetUniformLocation(terrain_shader->ID, "eps"), shader_epsilon);
+	//glUniform3f(glGetUniformLocation(terrain_shader->ID, "spos"), sphere_position.x, sphere_position.y, sphere_position.z);
+
+
+	//only needs to happen once but hey whatever
+	glUniform1i(glGetUniformLocation(terrain_shader->ID, "texture0"), 0);//set texture0 sampler to grab texture 0
+	//glUniform1i(glGetUniformLocation(terrain_shader->ID, "texture1"), 1);//set texture1 sampler to grab texture 1
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, heightmap->gl_texture_id);
+	//glActiveTexture(GL_TEXTURE1);
+	//glBindTexture(GL_TEXTURE_2D, texture1);
+
+	geometry->draw();
 }

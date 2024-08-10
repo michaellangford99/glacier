@@ -26,7 +26,7 @@
 
 class element
 {
-private:
+public:
 	std::vector<std::shared_ptr<element>> children;
 
 	glm::vec3 position;
@@ -34,7 +34,6 @@ private:
 	
 	glm::mat4x4 world;
 
-public:
 	element();
 	virtual void update();
 	virtual void draw(glm::mat4x4 parent_world, Camera& camera);

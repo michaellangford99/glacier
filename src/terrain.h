@@ -20,6 +20,7 @@
 #include "triangles.h"
 #include "element.h"
 #include "camera.h"
+#include "texture.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -36,6 +37,8 @@ class terrain_tile : public element
 {
 private:
 	std::unique_ptr<terrain_geometry> geometry;
+	std::unique_ptr<texture> heightmap;
+	std::unique_ptr<Shader> terrain_shader;
 public:
 	terrain_tile(std::string terrain_file, int decimation);
 
