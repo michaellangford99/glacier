@@ -208,8 +208,12 @@ int main()
 
 	triangle_geometry fullscreen_quad = triangle_geometry(plane_vertices, plane_indices);
 
-	terrain_tile test_tile = terrain_tile("N32W111.hgt", 4, glm::vec3(0,0,0));
-	terrain_tile test_tile2 = terrain_tile("N34W119.hgt", 4, glm::vec3(-1.0f,0,0));
+	glm::vec3 origin_lla = glm::vec3(40.003963, -106.004053, 2419.0f);
+
+	terrain_tile test_tile  = terrain_tile("N39W106.hgt", 2, glm::vec3(39.0f,-106.0f, 0.0), origin_lla);
+	terrain_tile test_tile2 = terrain_tile("N39W107.hgt", 2, glm::vec3(39.0f,-107.0f, 0.0), origin_lla);
+	terrain_tile test_tile3 = terrain_tile("N40W106.hgt", 2, glm::vec3(40.0f,-106.0f, 0.0), origin_lla);
+	terrain_tile test_tile4 = terrain_tile("N40W107.hgt", 2, glm::vec3(40.0f,-107.0f, 0.0), origin_lla);
 
 	//texture test_texture = texture("content/container.jpg");
 	//setup imgui
@@ -230,57 +234,17 @@ int main()
 		glGetIntegerv(GL_VIEWPORT, viewport_size);
 		camera.update_view_projection();
 
-		bool draw_terrain = false;
-		if (draw_terrain)
-		{
-			//bind / apply shader?
-			ourShader.use();
-
-			//generate transformation matrices
-			glm::mat4 model = glm::mat4(1.0f);
-			//model = glm::translate(model, position);
-
-			//update view and pull view matrix out
-			glm::mat4 view = camera.view;
-
-			glm::mat4 projection;
-			projection = camera.projection;
-
-			//generate_image(data.data(), w, h);
-			//update_rgb_texture(texture0, data.data(), w, h);
-
-			//set auto-edited uniforms.
-			//afterwards reset those that are supposed to be set internally
-			ourShader.set_imgui_uniforms();
-
-			glUniformMatrix4fv(glGetUniformLocation(ourShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
-			glUniformMatrix4fv(glGetUniformLocation(ourShader.ID, "view"), 1, GL_FALSE, glm::value_ptr(view));
-			glUniformMatrix4fv(glGetUniformLocation(ourShader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-
-			glUniformMatrix4fv(glGetUniformLocation(ourShader.ID, "inv_view_projection"), 1, GL_FALSE, glm::value_ptr(glm::inverse(projection * view)));
-			glUniform3f(glGetUniformLocation(ourShader.ID, "camera_position"), camera.position.x, camera.position.y, camera.position.z);
-			//glUniform1f(glGetUniformLocation(ourShader.ID, "eps"), shader_epsilon);
-			//glUniform3f(glGetUniformLocation(ourShader.ID, "spos"), sphere_position.x, sphere_position.y, sphere_position.z);
-
-
-			//only needs to happen once but hey whatever
-			glUniform1i(glGetUniformLocation(ourShader.ID, "texture0"), 0);//set texture0 sampler to grab texture 0
-			//glUniform1i(glGetUniformLocation(ourShader.ID, "texture1"), 1);//set texture1 sampler to grab texture 1
-
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, test_texture.gl_texture_id);
-			//glActiveTexture(GL_TEXTURE1);
-			//glBindTexture(GL_TEXTURE_2D, texture1);
-
-			//fullscreen_quad_draw();
-			test.draw();
-		}
-
 		test_tile.update();
 		test_tile.draw(glm::mat4(1.0), camera);
 
 		test_tile2.update();
 		test_tile2.draw(glm::mat4(1.0), camera);
+
+		test_tile3.update();
+		test_tile3.draw(glm::mat4(1.0), camera);
+
+		test_tile4.update();
+		test_tile4.draw(glm::mat4(1.0), camera);
 
 		bool draw_fullscreen_shader = false;
 		if (draw_fullscreen_shader)

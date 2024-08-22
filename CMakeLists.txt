@@ -45,8 +45,19 @@ set(MY_RESOURCE_FILES
                         src/terrain.glsl
                         src/test_fullscreen_shader.glsl
 
-                        src/N34W119.hgt
+                        src/N19W156.hgt
+                        src/N19W157.hgt
+                        src/N20W156.hgt
+                        src/N20W157.hgt
                         src/N32W111.hgt
+                        src/N34W118.hgt
+                        src/N34W119.hgt
+                        src/N35W118.hgt
+                        src/N35W119.hgt
+                        src/N39W106.hgt
+                        src/N39W107.hgt
+                        src/N40W106.hgt
+                        src/N40W107.hgt
                     )
 
 #file(GLOB_RECURSE

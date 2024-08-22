@@ -46,7 +46,7 @@ private:
 	std::unique_ptr<texture> heightmap;
 	std::unique_ptr<Shader> terrain_shader;
 public:
-	terrain_tile(std::string terrain_file, int decimation, glm::vec3 lat_long_elev);
+	terrain_tile(std::string terrain_file, int decimation, glm::vec3 lat_long_elev, glm::vec3 origin_lla);
 
 	void draw(glm::mat4x4 parent_world, Camera& camera);
 };

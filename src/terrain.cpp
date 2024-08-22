@@ -14,8 +14,8 @@ terrain_geometry::terrain_geometry(std::string terrain_file, int decimation)
 
 	std::ifstream input = std::ifstream(terrain_file, std::ios::binary);
 
-	float resolution_meters_w = TERRAIN_DEGREES_PER_TILE * TERRAIN_METERS_PER_DEGREE / width;
-	float resolution_meters_h = TERRAIN_DEGREES_PER_TILE * TERRAIN_METERS_PER_DEGREE / height;
+	float resolution_meters_w = TERRAIN_DEGREES_PER_TILE * TERRAIN_METERS_PER_DEGREE / (width-1);
+	float resolution_meters_h = TERRAIN_DEGREES_PER_TILE * TERRAIN_METERS_PER_DEGREE / (height-1);
 
 	uint16_t min_height = 65535;
 
@@ -29,13 +29,19 @@ terrain_geometry::terrain_geometry(std::string terrain_file, int decimation)
 			input.read(raw_data, 2);
 			input.seekg((decimation - 1) * 2, std::ios_base::cur);
 
-			uint16_t height_m = (((uint16_t)raw_data[0] & 0xFF) << 8) | ((uint16_t)raw_data[1] & 0xFF);
+			char temp = raw_data[1];
+			raw_data[1] = raw_data[0];
+			raw_data[0] = temp;
 
+			uint16_t height_m = *(uint16_t*)raw_data;//(((uint16_t)raw_data[0] & 0xFF) << 8) | ((uint16_t)raw_data[1] & 0xFF);
+
+			height_m *= 4;
+			//std::cout << i<<"\t,"<<j<<"\t:\t"<<height_m<<std::endl;
 			//std::cout << (uint16_t)raw_data[0] << "\t" << (uint16_t)raw_data[1] << "\t" << height_m << std::endl;
 
 			if (min_height > height_m) min_height = height_m;
 
-			vertices[i*width + j].position = { resolution_meters_w*j/ meters_per_unit,resolution_meters_h*i / meters_per_unit,height_m / meters_per_unit };
+			vertices[i*width + j].position = { resolution_meters_w*j/ meters_per_unit,resolution_meters_h*height/meters_per_unit - resolution_meters_h*i / meters_per_unit,height_m / meters_per_unit };
 			//vertices[i*width + j].position += glm::linearRand(glm::vec3( -0.6, -0.6, 0), glm::vec3(0.6, 0.6, 0));
 
 			//set texcoord
@@ -48,42 +54,56 @@ terrain_geometry::terrain_geometry(std::string terrain_file, int decimation)
 		input.seekg((decimation - 1) * 2 * raw_width, std::ios_base::cur);
 	}
 
-	for (int i = 0; i < height; i++)
+	//don't do this anymore
+	/*for (int i = 0; i < height; i++)
 	{
 		for (int j = 0; j < width; j++)
 		{
 			//temp?
 			vertices[i*width + j].position.z -= min_height / meters_per_unit;
 		}
-	}
+	}*/
 
-	for (int i = 0; i < height - 1; i++)
+	for (int i = 0; i < height; i++)
 	{
-		for (int j = 0; j < width - 1; j++)
+		for (int j = 0; j < width; j++)
 		{
+			//just repeat the normal for the edge that doesn't exist:
+			if (i == height-1 && j == width-1) {
+				vertices[i*width + j].normal = vertices[(i-1)*width + (j-1)].normal;
+			} else if (i == height-1) {
+				vertices[i*width + j].normal = vertices[(i-1)*width + j].normal;
+			} else if (j == width-1) {
+				vertices[i*width + j].normal = vertices[i*width + (j-1)].normal;
+			}
+			else
+			{
+				//generate normal
+				glm::vec3 dx = vertices[i*width + j + 1].position - vertices[i*width + j].position;
+				glm::vec3 dy = vertices[(i+1)*width + j].position - vertices[i*width + j].position;
 
-			//generate normal
-			glm::vec3 dx = vertices[i*width + j + 1].position - vertices[i*width + j].position;
-			glm::vec3 dy = vertices[(i+1)*width + j].position - vertices[i*width + j].position;
+				dx = glm::normalize(dx);
+				dy = glm::normalize(dy);
 
-			dx = glm::normalize(dx);
-			dy = glm::normalize(dy);
-
-			glm::vec3 normal = glm::cross(dx, dy);
-			vertices[i*width + j].normal = glm::normalize(normal);
+				glm::vec3 normal = glm::cross(dx, dy);
+				vertices[i*width + j].normal = glm::normalize(normal);
+			}
 		}
 	}
+	
+	
+
 
 	for (int i = 1; i < height; i++)
 	{
 		for (int j = 1; j < width; j++)
 		{
-			indices.push_back((i - 1) * width + j - 1);
 			indices.push_back((i - 0) * width + j - 0);
+			indices.push_back((i - 1) * width + j - 1);
 			indices.push_back((i - 0) * width + j - 1);
 
-			indices.push_back((i - 1) * width + j - 1);
 			indices.push_back((i - 1) * width + j - 0);
+			indices.push_back((i - 1) * width + j - 1);
 			indices.push_back((i - 0) * width + j - 0);
 		}
 	}
@@ -95,16 +115,19 @@ terrain_geometry::terrain_geometry(std::string terrain_file, int decimation)
 
 //=============================================
 
-terrain_tile::terrain_tile(std::string terrain_file, int decimation, glm::vec3 lat_long_elev)//TODO add location
+terrain_tile::terrain_tile(std::string terrain_file, int decimation, glm::vec3 lat_long_elev, glm::vec3 origin_lla)
 {
 	geometry = std::unique_ptr<terrain_geometry>(new terrain_geometry(terrain_file, decimation));
 	heightmap = std::unique_ptr<texture>(new texture(terrain_file, 3601, 3601, 1, 2, GL_RED, GL_R32F, GL_SHORT, true));
 	terrain_shader = std::unique_ptr<Shader>(new Shader("vertex.glsl", "terrain.glsl"));
 	terrain_shader->generate_uniform_table();
 
-	position = glm::vec3(lat_long_elev.x*TERRAIN_METERS_PER_DEGREE / TERRAIN_METERS_PER_UNIT,
-						 lat_long_elev.y*TERRAIN_METERS_PER_DEGREE / TERRAIN_METERS_PER_UNIT,
-						 lat_long_elev.z);
+	//reference to origin
+	lat_long_elev -= origin_lla;
+
+	position = glm::vec3(lat_long_elev.y*TERRAIN_METERS_PER_DEGREE / TERRAIN_METERS_PER_UNIT,
+						 lat_long_elev.x*TERRAIN_METERS_PER_DEGREE / TERRAIN_METERS_PER_UNIT,
+						 lat_long_elev.z/TERRAIN_METERS_PER_UNIT);
 }
 
 void terrain_tile::draw(glm::mat4x4 parent_world, Camera& camera)
