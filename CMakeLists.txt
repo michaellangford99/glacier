@@ -45,6 +45,10 @@ set(MY_RESOURCE_FILES
                         src/terrain.glsl
                         src/test_fullscreen_shader.glsl
 
+                        src/grass.glsl
+                        src/noise.png
+                        src/noise_perlin.png
+
                         src/N19W156.hgt
                         src/N19W157.hgt
                         src/N20W156.hgt

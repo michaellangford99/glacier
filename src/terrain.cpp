@@ -35,7 +35,6 @@ terrain_geometry::terrain_geometry(std::string terrain_file, int decimation)
 
 			uint16_t height_m = *(uint16_t*)raw_data;//(((uint16_t)raw_data[0] & 0xFF) << 8) | ((uint16_t)raw_data[1] & 0xFF);
 
-			height_m *= 4;
 			//std::cout << i<<"\t,"<<j<<"\t:\t"<<height_m<<std::endl;
 			//std::cout << (uint16_t)raw_data[0] << "\t" << (uint16_t)raw_data[1] << "\t" << height_m << std::endl;
 

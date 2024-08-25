@@ -32,6 +32,7 @@ Camera camera(10.0f);
 Shader ourShader;
 
 Shader fullscreen_shader;
+Shader grass_shader;
 
 GLFWwindow* create_glfw_window(int width, int height)
 {
@@ -130,6 +131,10 @@ void layout_draw_imgui()
 
 			fullscreen_shader.generate_imgui_editor();
 
+			ImGui::Separator();
+
+			grass_shader.generate_imgui_editor();
+
 	//		ImGui::TreePop();
 	//	}
 	//}
@@ -179,6 +184,12 @@ int main()
 	fullscreen_shader = Shader("vertex.glsl", "test_fullscreen_shader.glsl");
 	fullscreen_shader.generate_uniform_table();
 
+	//TODO fix capital/non capital letter scheme
+	grass_shader = Shader("vertex.glsl", "grass.glsl");
+	grass_shader.generate_uniform_table();
+	texture grass_texture = texture("noise.png");
+	texture mask_texture = texture("noise_perlin.png");
+
 	glm::vec3 plane_vertices_position[] = {
 		// positions
 		{1.0f,	1.0f,	0.0f},	// top right
@@ -210,10 +221,10 @@ int main()
 
 	glm::vec3 origin_lla = glm::vec3(40.003963, -106.004053, 2419.0f);
 
-	terrain_tile test_tile  = terrain_tile("N39W106.hgt", 2, glm::vec3(39.0f,-106.0f, 0.0), origin_lla);
-	terrain_tile test_tile2 = terrain_tile("N39W107.hgt", 2, glm::vec3(39.0f,-107.0f, 0.0), origin_lla);
-	terrain_tile test_tile3 = terrain_tile("N40W106.hgt", 2, glm::vec3(40.0f,-106.0f, 0.0), origin_lla);
-	terrain_tile test_tile4 = terrain_tile("N40W107.hgt", 2, glm::vec3(40.0f,-107.0f, 0.0), origin_lla);
+	terrain_tile test_tile  = terrain_tile("N39W106.hgt", 20, glm::vec3(39.0f,-106.0f, 0.0), origin_lla);
+	terrain_tile test_tile2 = terrain_tile("N39W107.hgt", 20, glm::vec3(39.0f,-107.0f, 0.0), origin_lla);
+	terrain_tile test_tile3 = terrain_tile("N40W106.hgt", 20, glm::vec3(40.0f,-106.0f, 0.0), origin_lla);
+	terrain_tile test_tile4 = terrain_tile("N40W107.hgt", 20, glm::vec3(40.0f,-107.0f, 0.0), origin_lla);
 
 	//texture test_texture = texture("content/container.jpg");
 	//setup imgui
@@ -234,17 +245,58 @@ int main()
 		glGetIntegerv(GL_VIEWPORT, viewport_size);
 		camera.update_view_projection();
 
-		test_tile.update();
-		test_tile.draw(glm::mat4(1.0), camera);
+		bool draw_terrain = false;
+		if (draw_terrain)
+		{
+			test_tile.update();
+			test_tile.draw(glm::mat4(1.0), camera);
 
-		test_tile2.update();
-		test_tile2.draw(glm::mat4(1.0), camera);
+			test_tile2.update();
+			test_tile2.draw(glm::mat4(1.0), camera);
 
-		test_tile3.update();
-		test_tile3.draw(glm::mat4(1.0), camera);
+			test_tile3.update();
+			test_tile3.draw(glm::mat4(1.0), camera);
 
-		test_tile4.update();
-		test_tile4.draw(glm::mat4(1.0), camera);
+			test_tile4.update();
+			test_tile4.draw(glm::mat4(1.0), camera);
+		}
+
+		bool draw_grass_tiles = true;
+		if (draw_grass_tiles)
+		{
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  
+
+			grass_shader.use();
+			grass_shader.set_imgui_uniforms();
+			int max = 256;
+			for (int i = 0; i < max; i++)
+			{
+				glm::mat4x4 world = glm::mat4x4(1.0);
+				world = glm::translate(world, glm::vec3(0,0,0.1*(double)i/(double)max));
+
+				glm::mat4& view = camera.view;
+				glm::mat4& projection = camera.projection;
+
+				glUniformMatrix4fv(glGetUniformLocation(grass_shader.ID, "model"), 1, GL_FALSE, glm::value_ptr(world));
+				glUniformMatrix4fv(glGetUniformLocation(grass_shader.ID, "view"), 1, GL_FALSE, glm::value_ptr(view));
+				glUniformMatrix4fv(glGetUniformLocation(grass_shader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+				glUniformMatrix4fv(glGetUniformLocation(grass_shader.ID, "inv_view_projection"), 1, GL_FALSE, glm::value_ptr(glm::inverse(projection * view)));
+				glUniform3f(glGetUniformLocation(grass_shader.ID, "camera_position"), camera.position.x, camera.position.y, camera.position.z);
+
+				//only needs to happen once but hey whatever
+				glUniform1i(glGetUniformLocation(grass_shader.ID, "texture0"), 0);//set texture0 sampler to grab texture 0
+				glUniform1i(glGetUniformLocation(grass_shader.ID, "texture1"), 1);//set texture0 sampler to grab texture 0
+
+				glActiveTexture(GL_TEXTURE0);
+				glBindTexture(GL_TEXTURE_2D, grass_texture.gl_texture_id);
+
+				glActiveTexture(GL_TEXTURE1);
+				glBindTexture(GL_TEXTURE_2D, mask_texture.gl_texture_id);
+
+				fullscreen_quad.draw();
+			}
+		}
 
 		bool draw_fullscreen_shader = false;
 		if (draw_fullscreen_shader)
