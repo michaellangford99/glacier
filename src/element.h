@@ -16,7 +16,6 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 
-#include "shader.h"
 #include "triangles.h"
 #include "camera.h"
 
@@ -32,11 +31,11 @@ public:
 	glm::vec3 position = glm::vec3(0,0,0);
 	glm::vec3 rotation = glm::vec3(0,0,0);
 	
-	glm::mat4x4 world;
+	glm::mat4 world;
 
 	element();
 	virtual void update();
-	virtual void draw(glm::mat4x4 parent_world, Camera& camera);
+	virtual void draw(glm::mat4 parent_world, Camera& camera);
 };
 
 #endif

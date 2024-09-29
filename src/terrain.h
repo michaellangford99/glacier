@@ -48,7 +48,7 @@ private:
 public:
 	terrain_tile(std::string terrain_file, int decimation, glm::vec3 lat_long_elev, glm::vec3 origin_lla);
 
-	void draw(glm::mat4x4 parent_world, Camera& camera);
+	void draw(glm::mat4 parent_world, Camera& camera);
 };
 
 #endif

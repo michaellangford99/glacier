@@ -14,7 +14,7 @@ void element::update()
     world = glm::translate(world, position);
 }
 
-void element::draw(glm::mat4x4 parent_world, Camera& camera)
+void element::draw(glm::mat4 parent_world, Camera& camera)
 {
 
 }
