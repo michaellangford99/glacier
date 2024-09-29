@@ -46,22 +46,26 @@ set(MY_RESOURCE_FILES
                         src/test_fullscreen_shader.glsl
 
                         src/grass.glsl
-                        src/noise.png
-                        src/noise_perlin.png
 
-                        src/N19W156.hgt
-                        src/N19W157.hgt
-                        src/N20W156.hgt
-                        src/N20W157.hgt
-                        src/N32W111.hgt
-                        src/N34W118.hgt
-                        src/N34W119.hgt
-                        src/N35W118.hgt
-                        src/N35W119.hgt
-                        src/N39W106.hgt
-                        src/N39W107.hgt
-                        src/N40W106.hgt
-                        src/N40W107.hgt
+                        content/noise.png
+                        content/noise_perlin.png
+
+                        content/N19W156.hgt
+                        content/N19W157.hgt
+                        content/N20W156.hgt
+                        content/N20W157.hgt
+                        content/N32W111.hgt
+                        content/N32W112.hgt
+                        content/N31W111.hgt
+                        content/N31W112.hgt
+                        content/N34W118.hgt
+                        content/N34W119.hgt
+                        content/N35W118.hgt
+                        content/N35W119.hgt
+                        content/N39W106.hgt
+                        content/N39W107.hgt
+                        content/N40W106.hgt
+                        content/N40W107.hgt
                     )
 
 #file(GLOB_RECURSE
