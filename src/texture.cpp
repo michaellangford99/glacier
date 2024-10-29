@@ -98,6 +98,23 @@ texture::texture(std::string path)
 	return texture;
 }*/
 
+texture::texture(void* data, int width, int height, int channels, int bytes_per_channel, unsigned int gl_format, unsigned int gl_internal_format, unsigned int gl_type)
+{
+	glGenTextures(1, &gl_texture_id);
+	glBindTexture(GL_TEXTURE_2D, gl_texture_id);
+
+	set_default_wrap_filter();
+
+	glTexImage2D(GL_TEXTURE_2D, 0, gl_internal_format, width, height, 0, gl_format, gl_type, data);
+	std::cout << glGetError() << std::endl;
+	glGenerateMipmap(GL_TEXTURE_2D);
+		
+	if (data)
+	{
+		std::cout << "warning - loading null data as texture" << std::endl;
+	}
+}
+
 //for arbitrary data in binary blob
 texture::texture(std::string path, int width, int height, int channels, int bytes_per_channel, unsigned int gl_format, unsigned int gl_internal_format, unsigned int gl_type, bool byte_swap)
 {
@@ -130,6 +147,13 @@ texture::texture(std::string path, int width, int height, int channels, int byte
 	}
 }
 
+void texture::generate_mipmaps()
+{
+	bind();
+	glGenerateMipmap(GL_TEXTURE_2D);
+	unbind();
+}
+
 //TODO - later. should be called on a texture object.
 void update_rgb_texture(unsigned int texture, unsigned char* data, unsigned int offsetx, unsigned int offsety, unsigned int width, unsigned int height)
 {
@@ -151,4 +175,22 @@ void update_rgb_texture(unsigned int texture, unsigned char* data, unsigned int 
 	}
 
 	glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+void texture::bind()
+{	
+	glActiveTexture(active_texture_index);
+	glBindTexture(GL_TEXTURE_2D, gl_texture_id);
+}
+
+void texture::unbind()
+{
+	glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+/// @brief set the active texture index for binding. NOTE: does not bind or set the index, merely saves it for when we bind later
+/// @param index 
+void texture::save_active_texture_index(int index)
+{
+	active_texture_index = index;
 }

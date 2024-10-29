@@ -16,11 +16,6 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 
-#include "shader.h"
-#include "triangles.h"
-#include "element.h"
-#include "camera.h"
-
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -47,11 +42,22 @@ public:
 	unsigned int min_filter;
 	unsigned int mag_filter;
 
+	unsigned int active_texture_index;
+
 	texture(std::string path);
 	texture(std::string path, int width, int height, int channels, int bytes_per_channel, unsigned int gl_format, unsigned int gl_internal_format, unsigned int gl_type, bool byte_swap);
+	texture(void* data, int width, int height, int channels, int bytes_per_channel, unsigned int gl_format, unsigned int gl_internal_format, unsigned int gl_type);
 
 	void update(unsigned int xoffset, unsigned int yoffset, unsigned int width, unsigned int height, unsigned char* data);
 
+	void resize(int _width, int _height);
+
+	void generate_mipmaps();
+
+	void bind();
+	void unbind();
+
+	void save_active_texture_index(int index);
 };
 
 #endif
