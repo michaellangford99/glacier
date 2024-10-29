@@ -117,9 +117,68 @@ terrain_geometry::terrain_geometry(std::string terrain_file, int decimation)
 terrain_tile::terrain_tile(std::string terrain_file, int decimation, glm::vec3 lat_long_elev, glm::vec3 origin_lla)
 {
 	geometry = std::unique_ptr<terrain_geometry>(new terrain_geometry(terrain_file, decimation));
-	heightmap = std::unique_ptr<texture>(new texture(terrain_file, 3601, 3601, 1, 2, GL_RED, GL_R32F, GL_SHORT, true));
+
+	//------ encapsulate ------
+
+	glm::vec3 plane_vertices_position[] = {
+		// positions
+		{1.0f,	1.0f,	0.0f},	// top right
+		{1.0f,	-1.0f,	0.0f},	// bottom right
+		{-1.0f,	-1.0f,	0.0f},	// bottom left
+		{-1.0f,	1.0f,	0.0f}	// top left 
+	};
+
+	glm::vec2 plane_vertices_texcoord[] = {
+		{1.0f, 1.0f },	// top right
+		{1.0f, 0.0f},	// bottom right
+		{0.0f, 0.0f},   // bottom left
+		{0.0f, 1.0f}    // top left 
+	};
+
+	std::vector<vertex> plane_vertices = std::vector<vertex>(4);
+	for (int i = 0; i < 4; i++)
+		plane_vertices[i] = { plane_vertices_position[i],
+							  glm::vec3(0,1,0),
+							  plane_vertices_texcoord[i],
+							  glm::vec3(1,1,1) };
+
+	std::vector<unsigned int> plane_indices = {
+			0, 3, 1, // first triangle
+			1, 3, 2  // second triangle
+	};
+
+	triangle_geometry fullscreen_quad = triangle_geometry(plane_vertices, plane_indices);
+	
+	height_map = std::unique_ptr<texture>(new texture(terrain_file, 3601, 3601, 1, 2, GL_RED, GL_R32F, GL_SHORT, true));
+
+	//---- generate normal map from heightmap ----
+
+	normal_map = std::shared_ptr<texture>(new texture(nullptr, 3601, 3601, 4, 2, GL_RGBA, GL_RGBA, GL_SHORT));
+	framebuffer fb = framebuffer(3601, 3601, normal_map);
+
+	normal_shader = std::unique_ptr<Shader>(new Shader("vertex.glsl", "height_to_normal.glsl"));
+	normal_shader->set_uniform("height_map", height_map.get());
+	normal_shader->set_uniform("model", glm::mat4(1.0));
+	normal_shader->set_uniform("view", glm::mat4(1.0));
+	normal_shader->set_uniform("projection", glm::mat4(1.0));
+
+	fb.bind_and_predraw();
+	
+	normal_shader->bind();
+	normal_shader->set_imgui_uniforms();
+	fullscreen_quad.draw();
+	
+	fb.unbind();
+	
+	normal_map->generate_mipmaps();
+
+	//---- set up terrain shader ----
+    
 	terrain_shader = std::unique_ptr<Shader>(new Shader("vertex.glsl", "terrain.glsl"));
-	terrain_shader->generate_uniform_table();
+	terrain_shader->set_uniform("terrain_intensity", 1.0f);
+	terrain_shader->set_uniform("terrain_color", glm::vec3(0.2,0.2,0.2));
+	terrain_shader->set_uniform("normal_map", normal_map.get());
+	terrain_shader->set_uniform("light_dir", glm::vec3(1.0, 0.3, 1.0));
 
 	//reference to origin
 	lat_long_elev -= origin_lla;
@@ -129,13 +188,14 @@ terrain_tile::terrain_tile(std::string terrain_file, int decimation, glm::vec3 l
 						 lat_long_elev.z/TERRAIN_METERS_PER_UNIT);
 }
 
-void terrain_tile::draw(glm::mat4x4 parent_world, Camera& camera)
+void terrain_tile::generate_imgui_editor()
 {
-	// FIX THIS:::
-	// also, is any of this abstractable??
-	// like should there be an intermediate type of 'shaded_element' that implements the matrix assignements to the shader?
+	terrain_shader->generate_imgui_editor();
+}
 
-	terrain_shader->use();
+void terrain_tile::draw(glm::mat4 parent_world, Camera& camera)
+{
+	terrain_shader->bind();
 
 	//update view and pull view matrix out
 	glm::mat4& view = camera.view;
@@ -143,26 +203,14 @@ void terrain_tile::draw(glm::mat4x4 parent_world, Camera& camera)
 
 	//set auto-edited uniforms.
 	//afterwards reset those that are supposed to be set internally
+
+	terrain_shader->set_uniform("model", parent_world * world);
+	terrain_shader->set_uniform("view", view);
+	terrain_shader->set_uniform("projection", projection);
+	terrain_shader->set_uniform("inv_view_projection", glm::inverse(projection * view));
+	terrain_shader->set_uniform("camera_position", camera.position);
+
 	terrain_shader->set_imgui_uniforms();
-
-	glUniformMatrix4fv(glGetUniformLocation(terrain_shader->ID, "model"), 1, GL_FALSE, glm::value_ptr(parent_world * world));
-	glUniformMatrix4fv(glGetUniformLocation(terrain_shader->ID, "view"), 1, GL_FALSE, glm::value_ptr(view));
-	glUniformMatrix4fv(glGetUniformLocation(terrain_shader->ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-
-	glUniformMatrix4fv(glGetUniformLocation(terrain_shader->ID, "inv_view_projection"), 1, GL_FALSE, glm::value_ptr(glm::inverse(projection * view)));
-	glUniform3f(glGetUniformLocation(terrain_shader->ID, "camera_position"), camera.position.x, camera.position.y, camera.position.z);
-	//glUniform1f(glGetUniformLocation(terrain_shader->ID, "eps"), shader_epsilon);
-	//glUniform3f(glGetUniformLocation(terrain_shader->ID, "spos"), sphere_position.x, sphere_position.y, sphere_position.z);
-
-
-	//only needs to happen once but hey whatever
-	glUniform1i(glGetUniformLocation(terrain_shader->ID, "texture0"), 0);//set texture0 sampler to grab texture 0
-	//glUniform1i(glGetUniformLocation(terrain_shader->ID, "texture1"), 1);//set texture1 sampler to grab texture 1
-
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, heightmap->gl_texture_id);
-	//glActiveTexture(GL_TEXTURE1);
-	//glBindTexture(GL_TEXTURE_2D, texture1);
 
 	geometry->draw();
 }
