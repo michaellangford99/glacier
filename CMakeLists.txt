@@ -23,6 +23,7 @@ target_sources(glacier  PRIVATE src/main.cpp
                         src/shader_stage.cpp
                         src/shader.cpp
                         src/terrain.cpp
+                        src/framebuffer.cpp
                         src/texture.cpp
                         src/triangles.cpp
                         src/imgui/imgui_demo.cpp
