@@ -34,6 +34,7 @@ public:
 	glm::mat4 world;
 
 	element();
+	virtual void generate_imgui_editor();
 	virtual void update();
 	virtual void draw(glm::mat4 parent_world, Camera& camera);
 };
