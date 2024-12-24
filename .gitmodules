@@ -1,3 +1,6 @@
 [submodule "include/glm"]
 	path = include/glm
 	url = git@github.com:g-truc/glm.git
+[submodule "src/imgui"]
+	path = src/imgui
+	url = git@github.com:ocornut/imgui.git
