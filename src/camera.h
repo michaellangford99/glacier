@@ -7,6 +7,7 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <memory>
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -23,7 +24,7 @@
 class Camera
 {
 private:
-	float yaw = 0.0f;
+	float yaw = -glm::pi<double>()/2.0;
 	float pitch = 0.01f;
 	float radius = 10.0f;
 

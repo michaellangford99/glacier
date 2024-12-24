@@ -7,6 +7,7 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <memory>
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"

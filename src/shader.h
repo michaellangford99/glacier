@@ -10,6 +10,7 @@
 #include <stddef.h>
 #include <map>
 #include <vector>
+#include <memory>
 
 #include "texture.h"
 
