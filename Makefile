@@ -20,7 +20,7 @@ LDFLAGS := -pthread -ldl -lglfw -lfreetype
 LDPATHS := $(addprefix -L,$(LIB) $(EXT_LIB))
 
 # Include directories
-INC_DIRS := $(INC) $(wildcard src/*/)
+INC_DIRS := $(INC) $(INC)/glm $(wildcard src/*/)
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 
 # Construct build output and dependency filenames.
