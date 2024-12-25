@@ -1,7 +1,17 @@
 *.lib
 *.sln
+*.d
+*.slo
+*.lo
+*.o
+*.obj
+*.la
+*.a
+*.lib
+*.exe
+*.out
+*.app
 
 build/*
 bin/*
 .vscode/*
-
