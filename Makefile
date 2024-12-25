@@ -20,17 +20,24 @@ LDFLAGS := -pthread -ldl -lglfw -lfreetype
 LDPATHS := $(addprefix -L,$(LIB) $(EXT_LIB))
 
 # Include directories
-INC_DIRS := $(INC) $(INC)/glm $(wildcard src/*/)
+INC_DIRS := $(INC) $(wildcard $(SRC)/*/) $(INC)/glm /usr/include/freetype2
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 
 # Construct build output and dependency filenames.
-SRCS := $(shell find src -name '*.c') $(shell find src -name '*.cpp')
+IMGUI_SRC_DIR := $(SRC)/imgui
+IMGUI_SRCS := $(wildcard $(IMGUI_SRC_DIR)/*.cpp) \
+			  $(IMGUI_SRC_DIR)/backends/imgui_impl_opengl3.cpp \
+			  $(IMGUI_SRC_DIR)/backends/imgui_impl_glfw.cpp \
+			  $(IMGUI_SRC_DIR)/misc/freetype/imgui_freetype.cpp	  
+
+#SRCS := $(shell find src -name '*.c') $(shell find src -name '*.cpp')
+SRCS := $(wildcard $(SRC)/*.cpp $(SRC)/*.c) $(IMGUI_SRCS)
 OBJS := $(subst $(SRC)/,$(BUILD)/,$(addsuffix .o,$(basename $(SRCS))))
 DEPS := $(OBJS:.o=.d)
 
 # Generate target names for content files
-GLSL := $(subst $(SRC)/,$(BIN)/,$(shell find src -name '*.glsl'))
-FONT := $(subst $(SRC)/,$(BIN)/,$(shell find src -name '*.ttf'))
+GLSL := $(subst $(SRC)/,$(BIN)/,$(shell find $(SRC) -name '*.glsl'))
+FONT := $(subst $(SRC)/,$(BIN)/,$(shell find $(SRC) -name '*.ttf'))
 CONTENT_TARGETS := $(subst $(CONTENT)/,$(BIN)/,$(wildcard content/*))
 
 # Build task
