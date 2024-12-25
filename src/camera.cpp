@@ -1,6 +1,6 @@
-#include "imgui.h"
-#include "imgui_impl_glfw.h"
-#include "imgui_impl_opengl3.h"
+#include "imgui/imgui.h"
+#include "imgui/backends/imgui_impl_glfw.h"
+#include "imgui/backends/imgui_impl_opengl3.h"
 
 #include <glad/glad.h> 
 #include <GLFW/glfw3.h>
@@ -34,7 +34,7 @@ void Camera::update_view_projection()
 		viewport_height = viewport_size[3];
 	}
 
-	projection = glm::perspective(glm::radians(45.0f), (float)viewport_width / (float)viewport_height, 0.1f, (float)4000);
+	projection = glm::perspective(glm::radians(45.0f), (float)viewport_width / (float)viewport_height, 1.0f, (float)250);
 }
 
 void Camera::mouse_callback(GLFWwindow* window, double xpos, double ypos)
