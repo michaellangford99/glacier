@@ -44,7 +44,7 @@ CONTENT_TARGETS := $(subst $(CONTENT)/,$(BIN)/,$(wildcard content/*))
 build: all
 
 # Main task
-all: $(TARGET) $(GLSL) $(CONTENT_TARGETS)
+all: $(TARGET) $(GLSL) $(FONT) $(CONTENT_TARGETS)
 #	@echo $(SRCS)
 #	@echo $<
 
