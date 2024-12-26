@@ -19,6 +19,8 @@ Grass demo:
 
 ![alt text](image-1.png)
 
+[text](docs/grass_wind_demo.webm)
+
 ---------------------actual readme above. bs thoughts below.-----------------------
 
 TODO:
@@ -57,6 +59,9 @@ x precompute normal map via framebuffer
 - depth shader
   
 volumetric rendering
+
+some form of settings serialization and screenshots. like save a screenshot with a save off of the shader source and settings that created it
+and heck maybe the camera parameters while we're at it
 
 onscreen text
 - freetype loader
