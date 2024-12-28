@@ -16,13 +16,19 @@ Camera::Camera(float _radius)
 	radius = _radius;
 }
 
+void Camera::generate_imgui_editor()
+{
+	ImGui::SliderFloat("mouse_sensitivity", &(mouse_sensitivity), 0.001f, 0.01f);
+	ImGui::SliderFloat("scroll_sensitivity", &(scroll_sensitivity), 0.2f, 2.0f);
+}
+
 void Camera::update_view_projection()
 {
 	float camZ = sin(pitch) * radius;
 	float proj_radius = cos(pitch) * radius;
 	float camX = cos(yaw) * proj_radius;
 	float camY = sin(yaw) * proj_radius;
-	position = glm::vec3(camX, camY, camZ);
+	position = glm::vec3(camX, camY, camZ) + look_at;
 	view = glm::lookAt(position, look_at, glm::vec3(0.0, 0.0, 1.0));
 
 	int viewport_size[4];
