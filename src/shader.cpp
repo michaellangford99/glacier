@@ -2,15 +2,17 @@
 
 void Shader::generate_imgui_editor()
 {	
-	std::string sep_text = "Shader: [vert]:'" + vertex_path + "',[frag]:'" + fragment_path + "'";
+	//std::string sep_text = "Shader: [vert]:'" + vertex_path + "',[frag]:'" + fragment_path + "'";
 
-	ImGui::SeparatorText(sep_text.c_str());
+	//ImGui::SeparatorText(sep_text.c_str());
 
 	ImGui::PushID(ID);
-	if (ImGui::BeginTable("", 4, ImGuiTableFlags_BordersOuter | 
-								 ImGuiTableFlags_RowBg |
+	if (ImGui::BeginTable("Settings", 4, ImGuiTableFlags_BordersOuter | 
+								 /*ImGuiTableFlags_RowBg | */
+								 ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_BordersInnerV |
 								 ImGuiTableFlags_BordersOuterH |
-								 ImGuiTableFlags_Resizable))
+								 ImGuiTableFlags_Resizable |
+								 ImGuiTableFlags_SizingFixedFit))
 	{
 		ImGui::TableSetupColumn("name", ImGuiTableColumnFlags_WidthFixed);
 		ImGui::TableSetupColumn("value", ImGuiTableColumnFlags_WidthStretch);
@@ -50,9 +52,9 @@ void Shader::generate_imgui_editor()
 				case GL_SAMPLER_2D:
 					if (uniform_list[i].local_texture)
 					{
-						ImTextureID tex_id = (void*)(uniform_list[i].local_texture->gl_texture_id);
+						ImTextureID tex_id = (ImTextureID)(void*)(uniform_list[i].local_texture->gl_texture_id);
 						float aspect = (float)uniform_list[i].local_texture->height/(float)uniform_list[i].local_texture->width;
-						ImGui::ImageButton(tex_id, ImVec2(100, 100*aspect));
+						ImGui::ImageButton(("texture##"+std::to_string(i)).c_str(), tex_id, ImVec2(100, 100*aspect));
 						if (ImGui::IsItemActive())
 						{
 							ImGui::BeginTooltip();
@@ -70,8 +72,6 @@ void Shader::generate_imgui_editor()
 
 				int min_max_width = 90;
 
-				ImGui::TableSetColumnIndex(2);
-				ImGui::SetNextItemWidth(min_max_width);
 
 				switch (uniform_list[i].uniform_type)
 				{
@@ -80,10 +80,19 @@ void Shader::generate_imgui_editor()
 				case GL_FLOAT_VEC2:
 				case GL_FLOAT_VEC3:
 				case GL_FLOAT_VEC4: 
-					ImGui::InputFloat("##min" + i*2, &uniform_list[i].min, 1); 
+
+					//ImGui::PushID(i);
+				
+					ImGui::TableSetColumnIndex(2);
+					ImGui::SetNextItemWidth(min_max_width);
+					//ImGui::SameLine();
+					ImGui::InputFloat(("##min"+std::to_string(i)).c_str(), &uniform_list[i].min, 1); 
 					ImGui::TableSetColumnIndex(3);
 					ImGui::SetNextItemWidth(min_max_width);
-					ImGui::InputFloat("##max" + i*2+1, &uniform_list[i].max, 1); break;
+					//ImGui::SameLine();
+					ImGui::InputFloat(("##max"+std::to_string(i)).c_str(), &uniform_list[i].max, 1); break;
+					
+					//ImGui::PopID();
 				default: break;
 				}
 			}
@@ -106,6 +115,7 @@ void Shader::generate_imgui_editor()
 		generate_uniform_table();
 
 		//now try to add them back
+		//TODO: this feels a bit icky
 
 		for (auto& u : uniform_list)
 		{
@@ -118,19 +128,40 @@ void Shader::generate_imgui_editor()
 			}
 		}
 	}
+
+	//TODO: finish this deserialization. But not in this class
+	//in progress
+	if (ImGui::Button("Print Settings"))
+	{
+		for (int i = 0; i < uniform_list.size(); i++)
+		{
+			//there should be some form of serialization abstraction in future
+			switch (uniform_list[i].uniform_type)
+				{
+				case GL_INT: std::cout << "(shader)./->set_uniform(\"" << uniform_list[i].uniform_name << "\", " << uniform_list[i].local_int << ");" << std::endl; break;
+				case GL_FLOAT: std::cout << "(shader)./->set_uniform(\"" << uniform_list[i].uniform_name << "\", " << uniform_list[i].local_float << ");" << std::endl; break;
+				/*case GL_FLOAT_VEC2:
+				case GL_FLOAT_VEC3:
+				case GL_FLOAT_VEC4: */
+				}
+
+		}
+	}
+
 	ImGui::PopID();
 }
 
 Shader::Shader(std::string _vertex_path, std::string _fragment_path) : vertex_path(_vertex_path), fragment_path(_fragment_path)
 {
+	//TODO: clean up paths implementation
 	//std::string backup_vert_path = vertex_path;
 	//std::string backup_frag_path = fragment_path;
 
 	if (navigate_to_source_directory)
 	{
 		//check if file exists under various subdirectories. HACK.
-		vertex_path = "../../src/" + vertex_path;
-		fragment_path = "../../src/" + fragment_path;
+		vertex_path = "../src/" + vertex_path;
+		fragment_path = "../src/" + fragment_path;
 
 		compile_shader_program();
 		generate_uniform_table();
@@ -157,6 +188,8 @@ Shader::Shader(std::string _vertex_path, std::string _fragment_path) : vertex_pa
 
 bool Shader::compile_shader_program()
 {
+	std::cout << "Attempting to compile v:" << vertex_path << " f:" << fragment_path << std::endl;
+
 	// 1. retrieve the vertex/fragment source code from filePath
 	std::string vertexCode;
 	std::string fragmentCode;
@@ -304,6 +337,7 @@ void Shader::set_imgui_uniforms()
 				uniform_list[i].local_texture->save_active_texture_index(backup_active_texture_index);
 			}
 			texture_index++;
+			break;
 		}
 	}
 }

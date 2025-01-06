@@ -1,10 +1,15 @@
-﻿#include "imgui.h"
-#include "imgui_impl_glfw.h"
-#include "imgui_impl_opengl3.h"
+﻿#include "imgui/imgui.h"
+#include "imgui/backends/imgui_impl_glfw.h"
+#include "imgui/backends/imgui_impl_opengl3.h"
+#include "imgui/imgui_internal.h"
+
+#define IMGUI_USER_CONFIG
+#define IMGUI_ENABLE_FREETYPE
 
 #include <vector>
 #include <map>
 #include <algorithm>
+#include <memory>
 
 #include <glad/glad.h> 
 #include <GLFW/glfw3.h>
@@ -29,10 +34,18 @@ void processInput(GLFWwindow *window);
 //All globals
 
 Camera camera(10.0f);
-Shader ourShader;
 
-Shader fullscreen_shader;
-Shader grass_shader;
+Shader* fullscreen_shader;
+Shader* grass_shader;
+
+std::shared_ptr<element> root;
+
+//viewport parameters
+glm::vec2 viewport_pos = {0,0};
+glm::vec2 viewport_size;
+glm::vec2 window_size;
+
+void set_render_area(glm::vec2 pos, glm::vec2 size);
 
 GLFWwindow* create_glfw_window(int width, int height)
 {
@@ -42,10 +55,9 @@ GLFWwindow* create_glfw_window(int width, int height)
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	glfwWindowHint(GLFW_SAMPLES, 4);
-	//glEnable(GL_MULTISAMPLE);
+	//glfwWindowHint(GLFW_SAMPLES, 4);
 
-	GLFWwindow* window = glfwCreateWindow(width, height, "LearnOpenGL", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(width, height, "Glacier", NULL, NULL);
 	if (window == NULL)
 	{
 		std::cout << "Failed to create GLFW window" << std::endl;
@@ -61,6 +73,7 @@ GLFWwindow* create_glfw_window(int width, int height)
 	}
 
 	glViewport(0, 0, width, height);
+	//glEnable(GL_MULTISAMPLE);
 	return window;
 }
 
@@ -83,9 +96,54 @@ void setup_imgui(GLFWwindow* window)
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
-	ImGui::StyleColorsDark();
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 	ImGui_ImplOpenGL3_Init("#version 330");
+
+	ImFontConfig imf = ImFontConfig();
+	imf.OversampleH = 3;
+	imf.OversampleV = 3;
+	imf.PixelSnapH = true;
+	//io.Fonts->AddFontFromFileTTF("imgui/misc/fonts/DroidSans.ttf", 14.5);
+	io.Fonts->AddFontFromFileTTF("Ubuntu-R.ttf", 13);
+
+	ImGui::StyleColorsDark();
+	ImGuiStyle& style = ImGui::GetStyle();
+	style.Alpha = 1.0f;
+	style.FrameRounding = 2.0f;
+	style.WindowRounding = 3.0f;
+	style.ChildRounding = 2.0f;
+	style.GrabRounding = 2.0f;
+	style.Colors[ImGuiCol_Text]                   = ImVec4(1.00f, 1.00f, 1.00f, 0.94f);
+	style.Colors[ImGuiCol_WindowBg]               = ImVec4(0.12f, 0.12f, 0.12f, 0.94f);
+	style.Colors[ImGuiCol_FrameBg]                = ImVec4(0.16f, 0.29f, 0.48f, 0.54f);
+	style.Colors[ImGuiCol_TitleBg]                = ImVec4(0.28f, 0.28f, 0.28f, 1.00f);
+
+	ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+}
+
+void recurse_imgui_tree(std::shared_ptr<element> e)
+{
+	e->generate_imgui_editor();
+
+	int c_idx = 0;
+	for (auto &c : e->children)
+	{
+		if (ImGui::TreeNode(("element "+std::to_string(c_idx++)).c_str()))
+		{
+			recurse_imgui_tree(c);
+
+			ImGui::TreePop();
+			ImGui::Spacing();
+		}
+	}
+}
+
+void generate_tree_imgui_editor()
+{
+	if (root)
+	{
+		recurse_imgui_tree(root);
+	}
 }
 
 void layout_draw_imgui()
@@ -94,10 +152,12 @@ void layout_draw_imgui()
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
+
+	ImGuiID id = ImGui::DockSpaceOverViewport(0, nullptr, ImGuiDockNodeFlags_NoDockingInCentralNode | ImGuiDockNodeFlags_PassthruCentralNode, nullptr);
+	ImGuiDockNode* node = ImGui::DockBuilderGetCentralNode(id);
+
 	// ImGUI window creation
-	ImGui::Begin("My name is window, ImGUI window");
-	// Text that appears in the window
-	ImGui::Text("Hello there adventurer!");
+	ImGui::Begin("Settings");
 	// Checkbox that appears in the window
 	//ImGui::Checkbox("Draw Triangle", &drawTriangle);
 	// Slider that appears in the window
@@ -125,15 +185,31 @@ void layout_draw_imgui()
 
 	//TODO: add here to loop through any items that have registered to have an editor
 
-			ourShader.generate_imgui_editor();
+	if (ImGui::CollapsingHeader("Camera"))
+	{
+		camera.generate_imgui_editor();
+	}
 
-			ImGui::Separator();
+	if (ImGui::CollapsingHeader("Shaders"))
+    {
+        if (ImGui::TreeNode("fullscreen_shader"))
+        {
+			fullscreen_shader->generate_imgui_editor();
+            ImGui::TreePop();
+            ImGui::Spacing();
+		}
 
-			fullscreen_shader.generate_imgui_editor();
+		if (ImGui::TreeNode("grass_shader"))
+        {
+			grass_shader->generate_imgui_editor();
+            ImGui::TreePop();
+            ImGui::Spacing();
+		}
 
-			ImGui::Separator();
+		ImGui::Separator();
+		generate_tree_imgui_editor();
+	}
 
-			grass_shader.generate_imgui_editor();
 
 	//		ImGui::TreePop();
 	//	}
@@ -150,45 +226,46 @@ void layout_draw_imgui()
 	ImGui::End();
 
 	ImGui::ShowDemoWindow();
-	ImGui::ShowDebugLogWindow();
+	//ImGui::ShowDebugLogWindow();
+
+	set_render_area({node->Pos.x, node->Pos.y}, {node->Size.x, node->Size.y});
 
 	// Renders the ImGUI elements
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
-float frame_time = 0.0f;
-
-
 int main()
 {
-	
-	GLFWwindow* window = create_glfw_window(800, 600);
+	window_size = {800, 600};
+
+	GLFWwindow* window = create_glfw_window(window_size.x, window_size.y);
 	if (window == NULL) return -1;
 
-	//enable error handling
-	/*int flags; glGetIntegerv(GL_CONTEXT_FLAGS, &flags);
-	if (flags & GL_CONTEXT_FLAG_DEBUG_BIT)
-	{
-		// initialize debug output 
-	}*/
-
 	setup_camera(window);
+
+	int vp[4];
+	glGetIntegerv(GL_VIEWPORT, vp);
+
+	viewport_pos = {vp[0], vp[1]};
+	viewport_size = {vp[2], vp[3]};
+	window_size = viewport_size;
+
 	camera.update_view_projection();
 
+	camera.look_at = glm::vec3(0,0.1,0);
+
 	//setup shaders
-	//ourShader = Shader("vertex.glsl", "ray_trace_viewer.glsl");
-	ourShader = Shader("vertex.glsl", "terrain.glsl");
-	ourShader.generate_uniform_table();
 
-	fullscreen_shader = Shader("vertex.glsl", "test_fullscreen_shader.glsl");
-	fullscreen_shader.generate_uniform_table();
-
+	fullscreen_shader = new Shader("vertex.glsl", "test_fullscreen_shader.glsl");
+	
 	//TODO fix capital/non capital letter scheme
-	grass_shader = Shader("vertex.glsl", "grass.glsl");
-	grass_shader.generate_uniform_table();
+	grass_shader = new Shader("vertex.glsl", "grass.glsl");
 	texture grass_texture = texture("noise.png");
 	texture mask_texture = texture("noise_perlin.png");
+
+	grass_shader->set_uniform("grass_texture", &grass_texture);
+	grass_shader->set_uniform("mask_texture", &mask_texture);
 
 	glm::vec3 plane_vertices_position[] = {
 		// positions
@@ -219,46 +296,56 @@ int main()
 
 	triangle_geometry fullscreen_quad = triangle_geometry(plane_vertices, plane_indices);
 
-	glm::vec3 origin_lla = glm::vec3(40.003963, -106.004053, 2419.0f);
+	glm::vec3 origin_lla = glm::vec3(32, -111, 2389.0f/3.0);
 
-	terrain_tile test_tile  = terrain_tile("N39W106.hgt", 20, glm::vec3(39.0f,-106.0f, 0.0), origin_lla);
-	terrain_tile test_tile2 = terrain_tile("N39W107.hgt", 20, glm::vec3(39.0f,-107.0f, 0.0), origin_lla);
-	terrain_tile test_tile3 = terrain_tile("N40W106.hgt", 20, glm::vec3(40.0f,-106.0f, 0.0), origin_lla);
-	terrain_tile test_tile4 = terrain_tile("N40W107.hgt", 20, glm::vec3(40.0f,-107.0f, 0.0), origin_lla);
+	std::shared_ptr<terrain_tile> test_tile  = std::make_shared<terrain_tile>("N31W111.hgt", 20, glm::vec3(31.0f,-111.0f, 0.0), origin_lla);
+	std::shared_ptr<terrain_tile> test_tile2 = std::make_shared<terrain_tile>("N31W112.hgt", 20, glm::vec3(31.0f,-112.0f, 0.0), origin_lla);
+	std::shared_ptr<terrain_tile> test_tile3 = std::make_shared<terrain_tile>("N32W111.hgt", 20, glm::vec3(32.0f,-111.0f, 0.0), origin_lla);
+	std::shared_ptr<terrain_tile> test_tile4 = std::make_shared<terrain_tile>("N32W112.hgt", 20, glm::vec3(32.0f,-112.0f, 0.0), origin_lla);
+
+	root = std::make_shared<element>();
+	root->children.push_back(test_tile);
+	root->children.push_back(test_tile2);
+	root->children.push_back(test_tile3);
+	root->children.push_back(test_tile4);
+
+	std::shared_ptr<Shader> arb_function_shader = std::shared_ptr<Shader>(new Shader("vertex.glsl", "arb_function.glsl"));
 
 	//texture test_texture = texture("content/container.jpg");
 	//setup imgui
 	setup_imgui(window);
-
+	float t=0.0f;
 	while (!glfwWindowShouldClose(window))
 	{
+		t += 1.0/30.0f;
 		//check key and mouse input
 		processInput(window);
-		frame_time += 1.0f / 60.0f;
+		//frame_time += 1.0f / 60.0f;
+
+		glViewport(viewport_pos.x, window_size.y-(viewport_size.y+viewport_pos.y), viewport_size.x,viewport_size.y);
 
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_CULL_FACE);
 
-		int viewport_size[4];
-		glGetIntegerv(GL_VIEWPORT, viewport_size);
+
 		camera.update_view_projection();
 
 		bool draw_terrain = false;
 		if (draw_terrain)
 		{
-			test_tile.update();
-			test_tile.draw(glm::mat4(1.0), camera);
+			test_tile->update();
+			test_tile->draw(glm::mat4(1.0), camera);
 
-			test_tile2.update();
-			test_tile2.draw(glm::mat4(1.0), camera);
+			test_tile2->update();
+			test_tile2->draw(glm::mat4(1.0), camera);
 
-			test_tile3.update();
-			test_tile3.draw(glm::mat4(1.0), camera);
+			test_tile3->update();
+			test_tile3->draw(glm::mat4(1.0), camera);
 
-			test_tile4.update();
-			test_tile4.draw(glm::mat4(1.0), camera);
+			test_tile4->update();
+			test_tile4->draw(glm::mat4(1.0), camera);
 		}
 
 		bool draw_grass_tiles = true;
@@ -267,32 +354,25 @@ int main()
 			glEnable(GL_BLEND);
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  
 
-			grass_shader.use();
-			grass_shader.set_imgui_uniforms();
+			grass_shader->bind();
+			
 			int max = 256;
 			for (int i = 0; i < max; i++)
 			{
-				glm::mat4x4 world = glm::mat4x4(1.0);
+				glm::mat4 world = glm::mat4(1.0);
 				world = glm::translate(world, glm::vec3(0,0,0.1*(double)i/(double)max));
 
 				glm::mat4& view = camera.view;
 				glm::mat4& projection = camera.projection;
 
-				glUniformMatrix4fv(glGetUniformLocation(grass_shader.ID, "model"), 1, GL_FALSE, glm::value_ptr(world));
-				glUniformMatrix4fv(glGetUniformLocation(grass_shader.ID, "view"), 1, GL_FALSE, glm::value_ptr(view));
-				glUniformMatrix4fv(glGetUniformLocation(grass_shader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-				glUniformMatrix4fv(glGetUniformLocation(grass_shader.ID, "inv_view_projection"), 1, GL_FALSE, glm::value_ptr(glm::inverse(projection * view)));
-				glUniform3f(glGetUniformLocation(grass_shader.ID, "camera_position"), camera.position.x, camera.position.y, camera.position.z);
+				grass_shader->set_uniform("model", world);
+				grass_shader->set_uniform("view", view);
+				grass_shader->set_uniform("projection", projection);
+				grass_shader->set_uniform("inv_view_projection", glm::inverse(projection * view));
+				grass_shader->set_uniform("camera_position", camera.position);
+				grass_shader->set_uniform("t", t);
 
-				//only needs to happen once but hey whatever
-				glUniform1i(glGetUniformLocation(grass_shader.ID, "texture0"), 0);//set texture0 sampler to grab texture 0
-				glUniform1i(glGetUniformLocation(grass_shader.ID, "texture1"), 1);//set texture0 sampler to grab texture 0
-
-				glActiveTexture(GL_TEXTURE0);
-				glBindTexture(GL_TEXTURE_2D, grass_texture.gl_texture_id);
-
-				glActiveTexture(GL_TEXTURE1);
-				glBindTexture(GL_TEXTURE_2D, mask_texture.gl_texture_id);
+				grass_shader->set_imgui_uniforms();
 
 				fullscreen_quad.draw();
 			}
@@ -302,19 +382,37 @@ int main()
 		if (draw_fullscreen_shader)
 		{
 			//bind / apply shader?
-			fullscreen_shader.use();
+			fullscreen_shader->bind();
 
-			fullscreen_shader.set_imgui_uniforms();
+			fullscreen_shader->set_imgui_uniforms();
 
-			glm::mat4x4 identity = glm::mat4x4(1.0);
+			glm::mat4 identity = glm::mat4(1.0);
 
-			glUniformMatrix4fv(glGetUniformLocation(fullscreen_shader.ID, "model"), 1, GL_FALSE, glm::value_ptr(identity));
-			glUniformMatrix4fv(glGetUniformLocation(fullscreen_shader.ID, "view"), 1, GL_FALSE, glm::value_ptr(identity));
-			glUniformMatrix4fv(glGetUniformLocation(fullscreen_shader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(identity));
+			glUniformMatrix4fv(glGetUniformLocation(fullscreen_shader->ID, "model"), 1, GL_FALSE, glm::value_ptr(identity));
+			glUniformMatrix4fv(glGetUniformLocation(fullscreen_shader->ID, "view"), 1, GL_FALSE, glm::value_ptr(identity));
+			glUniformMatrix4fv(glGetUniformLocation(fullscreen_shader->ID, "projection"), 1, GL_FALSE, glm::value_ptr(identity));
 
+			glUniform3f(glGetUniformLocation(fullscreen_shader->ID, "iResolution"), camera.viewport_width, camera.viewport_height, 0);
+			//glUniform1f(glGetUniformLocation(fullscreen_shader->ID, "iTime"), frame_time);
 
-			glUniform3f(glGetUniformLocation(fullscreen_shader.ID, "iResolution"), camera.viewport_width, camera.viewport_height, 0);
-			glUniform1f(glGetUniformLocation(fullscreen_shader.ID, "iTime"), frame_time);
+			fullscreen_quad.draw();
+		}
+
+		bool draw_arb_func_shader = false;
+		if (draw_arb_func_shader)
+		{
+			glm::mat4& view = camera.view;
+			glm::mat4& projection = camera.projection;
+
+			arb_function_shader->bind();
+			arb_function_shader->set_uniform("model", glm::mat4(1.0));
+			arb_function_shader->set_uniform("view", glm::mat4(1.0));
+			arb_function_shader->set_uniform("projection", glm::mat4(1.0));
+			arb_function_shader->set_uniform("iTime", t);
+			arb_function_shader->set_uniform("inv_view_projection", glm::inverse(projection * view));
+			arb_function_shader->set_uniform("camera_position", camera.position);
+
+			arb_function_shader->set_imgui_uniforms();
 
 			fullscreen_quad.draw();
 		}
@@ -325,6 +423,8 @@ int main()
 		glfwPollEvents();
 	}
 
+	delete fullscreen_shader;
+
 	// Deletes all ImGUI instances
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
@@ -334,9 +434,15 @@ int main()
 	return 0;
 }
 
+void set_render_area(glm::vec2 pos, glm::vec2 size)
+{
+	viewport_pos = pos;
+	viewport_size = size;
+}
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
-	glViewport(0, 0, width, height);
+	window_size = {width, height};//???
 }
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
