@@ -21,6 +21,8 @@ Grass demo:
 
 [text](docs/grass_wind_demo.webm)
 
+![alt text](image-2.png)
+
 ---------------------actual readme above. bs thoughts below.-----------------------
 
 TODO:
