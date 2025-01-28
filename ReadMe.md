@@ -13,6 +13,11 @@ Directory structure
 - src
   - glacier source code
 
+![alt text](image-5.png)
+
+![alt text](image-6.png)
+
+
 Grass demo:
 
 ![alt text](image.png)
@@ -22,6 +27,8 @@ Grass demo:
 [text](docs/grass_wind_demo.webm)
 
 ![alt text](image-2.png)
+
+![alt text](image-3.png)
 
 ---------------------actual readme above. bs thoughts below.-----------------------
 
@@ -200,3 +207,19 @@ colors[ImGuiCol_ModalWindowDimBg]       = ImVec4(0.80f, 0.80f, 0.80f, 0.35f);
 
 https://skytiger.wordpress.com/2010/11/28/xna-large-terrain/
 https://casual-effects.blogspot.com/2014/04/fast-terrain-rendering-with-continuous.html
+
+
+![alt text](image-4.png)
+
+---
+
+TODO: for art:
+camera pan / change target
+camera refactor to precompute inv view proj
+parameter class
+- serialize and deserialize parameter sets
+- load textures from file
+- load shaders from file
+- make parameters drive other parameters
+- link and unlink parameters
+save effects and demo code somehow in a way that is separate from the library-ish code
