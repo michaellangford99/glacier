@@ -4,3 +4,6 @@
 [submodule "src/imgui"]
 	path = src/imgui
 	url = git@github.com:ocornut/imgui.git
+[submodule "include/SimpleJSON"]
+	path = include/SimpleJSON
+	url = git@github.com:nbsdx/SimpleJSON.git
