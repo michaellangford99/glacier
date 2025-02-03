@@ -20,6 +20,9 @@ void Camera::generate_imgui_editor()
 {
 	ImGui::SliderFloat("mouse_sensitivity", &(mouse_sensitivity), 0.001f, 0.01f);
 	ImGui::SliderFloat("scroll_sensitivity", &(scroll_sensitivity), 0.2f, 2.0f);
+
+	ImGui::SliderFloat("near_plane", &near_plane, 0.01f, 1.0f);
+	ImGui::SliderFloat("far_plane", &far_plane, 50.0f, 300.0f);
 }
 
 void Camera::update_view_projection()
@@ -40,11 +43,15 @@ void Camera::update_view_projection()
 		viewport_height = viewport_size[3];
 	}
 
-	projection = glm::perspective(glm::radians(45.0f), (float)viewport_width / (float)viewport_height, 1.0f, (float)250);
+	projection = glm::perspective(glm::radians(45.0f), (float)viewport_width / (float)viewport_height, near_plane, far_plane);
 }
 
 void Camera::mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
+	//TODO: camera needs reference to its window and needs to bounds check this callback, not just for Imgui
+	//but also remember that maybe ImGui is holding a container that is using the camera
+	//Not sure how to handle stacks of windows holding a camera, as all the callbacks will get called.
+
 	float xoffset = xpos - lastX;
 	float yoffset = lastY - ypos; // reversed since y-coordinates range from bottom to top
 	lastX = xpos;

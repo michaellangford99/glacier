@@ -35,6 +35,9 @@ public:
 	float mouse_sensitivity = 0.005f;
 	float scroll_sensitivity = 1.0f;
 
+	float near_plane = 0.5f;
+	float far_plane = 250.0f;
+
 	int viewport_width=800;
 	int viewport_height=600;
 
@@ -43,6 +46,7 @@ public:
 
 	glm::mat4 view;
 	glm::mat4 projection;
+	//TODO: inverse_view_projection
 
 	Camera(float _radius);
 
