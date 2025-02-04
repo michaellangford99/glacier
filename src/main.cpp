@@ -21,6 +21,7 @@
 #include "shader.h"
 #include "terrain.h"
 #include "texture.h"
+#include "volume.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -48,6 +49,8 @@ public:
 	std::shared_ptr<Shader> arb_function_shader;
 	triangle_geometry* fullscreen_quad;
 	line_geometry* quad_lines;
+
+	std::shared_ptr<volume> test_volume;
 
 	std::shared_ptr<texture> grass_texture;
 	std::shared_ptr<texture> mask_texture;
@@ -331,6 +334,8 @@ glacier::glacier(GLFWwindow* _window) : window(_window)
 
 	fullscreen_quad = new triangle_geometry(plane_vertices, plane_indices);
 
+	test_volume = std::shared_ptr<volume>(new volume());
+
 	std::vector<vertex> tree;
 	add_limbs(tree, {0,0,0}, {0, 0, 1}, 1.0f, 10);
 
@@ -338,16 +343,18 @@ glacier::glacier(GLFWwindow* _window) : window(_window)
 
 	glm::vec3 origin_lla = glm::vec3(32, -111, 2389.0f/3.0);
 
-	test_tile  = std::make_shared<terrain_tile>("N31W111.hgt", 4, glm::vec3(31.0f,-111.0f, 0.0), origin_lla);
-	test_tile2 = std::make_shared<terrain_tile>("N31W112.hgt", 4, glm::vec3(31.0f,-112.0f, 0.0), origin_lla);
-	test_tile3 = std::make_shared<terrain_tile>("N32W111.hgt", 4, glm::vec3(32.0f,-111.0f, 0.0), origin_lla);
-	test_tile4 = std::make_shared<terrain_tile>("N32W112.hgt", 4, glm::vec3(32.0f,-112.0f, 0.0), origin_lla);
+	test_tile  = std::make_shared<terrain_tile>("N31W111.hgt", 50, glm::vec3(31.0f,-111.0f, 0.0), origin_lla);
+	test_tile2 = std::make_shared<terrain_tile>("N31W112.hgt", 50, glm::vec3(31.0f,-112.0f, 0.0), origin_lla);
+	test_tile3 = std::make_shared<terrain_tile>("N32W111.hgt", 50, glm::vec3(32.0f,-111.0f, 0.0), origin_lla);
+	test_tile4 = std::make_shared<terrain_tile>("N32W112.hgt", 50, glm::vec3(32.0f,-112.0f, 0.0), origin_lla);
 
 	root = std::make_shared<element>();
 	root->children.push_back(test_tile);
 	root->children.push_back(test_tile2);
 	root->children.push_back(test_tile3);
 	root->children.push_back(test_tile4);
+
+	root->children.push_back(test_volume);
 
 	arb_function_shader = std::shared_ptr<Shader>(new Shader("vertex.glsl", "arb_function.glsl"));
 }
@@ -459,6 +466,9 @@ void glacier::run()
 			quad_lines->draw();
 		//}
 	}
+
+	test_volume->update();
+	test_volume->draw(glm::mat4(1.0f), camera);
 
 	bool draw_arb_func_shader = false;
 	if (draw_arb_func_shader)
