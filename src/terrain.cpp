@@ -175,7 +175,7 @@ terrain_tile::terrain_tile(std::string terrain_file, int decimation, glm::vec3 l
 	//---- set up terrain shader ----
     
 	terrain_shader = std::unique_ptr<Shader>(new Shader("vertex.glsl", "terrain.glsl"));
-	terrain_shader->set_uniform("terrain_intensity", 1.0f);
+	terrain_shader->set_uniform("terrain_intensity", 1.6f);
 	terrain_shader->set_uniform("terrain_color", glm::vec3(0.2,0.2,0.2));
 	terrain_shader->set_uniform("normal_map", normal_map.get());
 	terrain_shader->set_uniform("light_dir", glm::vec3(1.0, 0.3, 1.0));
@@ -190,6 +190,7 @@ terrain_tile::terrain_tile(std::string terrain_file, int decimation, glm::vec3 l
 
 void terrain_tile::generate_imgui_editor()
 {
+	element::generate_imgui_editor();
 	terrain_shader->generate_imgui_editor();
 }
 

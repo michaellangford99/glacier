@@ -1,126 +1,5 @@
-// The MIT License
-// Copyright © 2017 Inigo Quilez
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-// https://www.youtube.com/c/InigoQuilez
-// https://iquilezles.org/
-
-
-// Computes the analytic derivatives of a 3D Value Noise. This can be used for example to
-// compute normals to a 3d rocks based on Value Noise without approximating the gradient by
-// haveing to take central differences (see this shader: https://www.shadertoy.com/view/XttSz2)
-
-// All noise functions here:
-//
-// https://www.shadertoy.com/playlist/fXlXzf&from=0&num=12
-
-//add inputs::
-//----------
-
-uniform vec3      iResolution;           // viewport resolution (in pixels)
-uniform float     iTime;                 // shader playback time (in seconds)
-//uniform float     iTimeDelta;            // render time (in seconds)
-//uniform float     iFrameRate;            // shader frame rate
-//uniform int       iFrame;                // shader playback frame
-//uniform float     iChannelTime[4];       // channel playback time (in seconds)
-//uniform vec3      iChannelResolution[4]; // channel resolution (in pixels)
-//uniform vec4      iMouse;                // mouse pixel coords. xy: current (if MLB down), zw: click
-//uniform samplerXX iChannel0..3;          // input channel. XX = 2D/Cube
-//uniform vec4      iDate;                 // (year, month, day, time in seconds)
-//uniform float     iSampleRate;           // sound sample rate (i.e., 44100)
-
-//----------
-
-
-// 0: integer hash
-// 1: float hash (aliasing based)
-#define METHOD 1
-
-// 0: cubic
-// 1: quintic
-#define INTERPOLANT 0
-
-/*#if METHOD==0
-float hash( ivec3 p )    // this hash is not production ready, please
-{                        // replace this by something better
-
-    // 3D -> 1D
-    int n = p.x*3 + p.y*113 + p.z*311;
-
-    // 1D hash by Hugo Elias
-	n = (n << 13) ^ n;
-    n = n * (n * n * 15731 + 789221) + 1376312589;
-    return -1.0+2.0*float( n & 0x0fffffff)/float(0x0fffffff);
-}
-#else*/
-float hash(vec3 p)  // replace this by something better
-{
-    p  = 50.0*fract( p*0.3183099 + vec3(0.71,0.113,0.419));
-    return -1.0+2.0*fract( p.x*p.y*p.z*(p.x+p.y+p.z) );
-}
-/*#endif*/
-
-
-// return value noise (in x) and its derivatives (in yzw)
-vec4 noised( in vec3 x )
-{
-    #if METHOD==0
-    ivec3 i = ivec3(floor(x));
-    #else
-    vec3 i = floor(x);
-    #endif
-    vec3 w = fract(x);
-    
-    #if INTERPOLANT==1
-    // quintic interpolation
-    vec3 u = w*w*w*(w*(w*6.0-15.0)+10.0);
-    vec3 du = 30.0*w*w*(w*(w-2.0)+1.0);
-    #else
-    // cubic interpolation
-    vec3 u = w*w*(3.0-2.0*w);
-    vec3 du = 6.0*w*(1.0-w);
-    #endif    
- 
-    #if METHOD==0
-    float a = hash(i+ivec3(0,0,0));
-    float b = hash(i+ivec3(1,0,0));
-    float c = hash(i+ivec3(0,1,0));
-    float d = hash(i+ivec3(1,1,0));
-    float e = hash(i+ivec3(0,0,1));
-	float f = hash(i+ivec3(1,0,1));
-    float g = hash(i+ivec3(0,1,1));
-    float h = hash(i+ivec3(1,1,1));
-	#else
-    float a = hash(i+vec3(0,0,0));
-    float b = hash(i+vec3(1,0,0));
-    float c = hash(i+vec3(0,1,0));
-    float d = hash(i+vec3(1,1,0));
-    float e = hash(i+vec3(0,0,1));
-	float f = hash(i+vec3(1,0,1));
-    float g = hash(i+vec3(0,1,1));
-    float h = hash(i+vec3(1,1,1));
-    #endif
-    
-    float k0 =   a;
-    float k1 =   b - a;
-    float k2 =   c - a;
-    float k3 =   e - a;
-    float k4 =   a - b - c + d;
-    float k5 =   a - c - e + g;
-    float k6 =   a - b - e + f;
-    float k7 = - a + b + c - d + e - f - g + h;
-
-    return vec4( k0 + k1*u.x + k2*u.y + k3*u.z + k4*u.x*u.y + k5*u.y*u.z + k6*u.z*u.x + k7*u.x*u.y*u.z, 
-                 du * vec3( k1 + k4*u.y + k6*u.z + k7*u.y*u.z,
-                            k2 + k5*u.z + k4*u.x + k7*u.z*u.x,
-                            k3 + k6*u.x + k5*u.y + k7*u.x*u.y ) );
-}
-
-//===============================================================================================
-//===============================================================================================
-//===============================================================================================
-//===============================================================================================
-//===============================================================================================
-out vec4 fragColor;
+#version 330 core
+out vec4 FragColor;
  
 in vec4 Position;
 in vec4 WorldPosition;
@@ -128,72 +7,158 @@ in vec3 Normal;
 in vec2 TexCoord;
 in vec3 Color;
 
-void main()
+uniform float iTime;
+
+uniform float star_brightness;
+
+uniform mat4 inv_view_projection;
+uniform vec3 camera_position;
+
+// Determine the unit vector to march along
+vec3 rayDirection(in float fieldOfView, in vec2 size, in vec2 frag_coord) {
+    vec2 xy = frag_coord - size / 2.0;
+    float z = size.y / tan(fieldOfView / 2.0);
+    return normalize(vec3(xy, -z));
+}
+
+float evaluate_equation(vec3 pos)
 {
-	vec2 fragCoord = TexCoord*iResolution.xy;
+    //float iTime= 0.0f;
+    vec3 e1 = vec3(3.0+2.0*cos(iTime), 2.0+2.0*cos(iTime), 5.0+2.0*cos(iTime));
+    vec3 e2 = vec3(-3, 0, 4);
+    
+    float tdoa = 3.0+2.0*sin(iTime);
+    
+    float d1 = abs(length(pos-e1)-length(pos-e2) - tdoa);
+    float d2 = abs(length(pos-e1)-length(pos-e2) + tdoa);
+    float d = min(d1, d2);
+    
+    //return length(pos-e1)-2.0;
+    
+    return length(pos-e1)-length(pos-e2) + tdoa;//d;
+}
 
-	vec2 p = (-iResolution.xy + 2.0*fragCoord.xy) / iResolution.y;
+vec3 gradient(vec3 pos)
+{
+    float delta = 0.01;
+    
+    float origin = evaluate_equation(pos);
+    
+    float dx = evaluate_equation(pos+vec3(delta,0,0))-origin;    
+    float dy = evaluate_equation(pos+vec3(0,delta,0))-origin;    
+    float dz = evaluate_equation(pos+vec3(0,0,delta))-origin;
+    
+    return vec3(dx, dy, dz)/delta;
+}
 
-     // camera movement	
-	float an = 0.005*iTime;
-	vec3 ro = vec3( 2.5*cos(an), 1.0, 2.5*sin(an) );
-    vec3 ta = vec3( 0.0, 1.0, 0.0 );
-    // camera matrix
-    vec3 ww = normalize( ta - ro );
-    vec3 uu = normalize( cross(ww,vec3(0.0,1.0,0.0) ) );
-    vec3 vv = normalize( cross(uu,ww));
-	// create view ray
-	vec3 rd = normalize( p.x*uu + p.y*vv + 1.5*ww );
+mat3 hessian(vec3 pos)
+{
+    //must evaluate a matrix of partial derivatives.
+    //can be seen as the transposed jacobian of the gradient right?
+    //which for range space of R1 means del`*del(f) yeah?
+    float delta = 0.01;
+    
+    vec3 origin = gradient(pos);
+    
+    vec3 dx = gradient(pos+vec3(delta,0,0))-origin;
+    vec3 dy = gradient(pos+vec3(0,delta,0))-origin;
+    vec3 dz = gradient(pos+vec3(0,0,delta))-origin;
+    
+    mat3 H = transpose(mat3(dx, dy, dz))/delta;
+    return H;
+}
 
-    // sphere center	
-	vec3 sc = vec3(0.0,1.0,0.0);
+float raymarch_hyperbola_newton(vec3 eye, vec3 ray_dir, out bool success)
+{
+    success = false;
+    
+    vec3 pos = eye;
+    
+    for (int i = 0; i < 50; i++)
+    {
+        vec3 grad = gradient(pos);
+        float dir_1st_deriv = -length(grad);//dot(grad,ray_dir);
+    
+        mat3 H = hessian(pos);
+        float dir_2nd_deriv = dot(ray_dir*H, ray_dir);
+    
+        pos += (-evaluate_equation(pos)/dir_1st_deriv)*ray_dir;
+        //pos += (-dir_1st_deriv/dir_2nd_deriv)*ray_dir;
+        
+        //evaluate how close we are to satisfying the eq
+        float d = evaluate_equation(pos);
+  
+        if (abs(d) < .05) {
+            //if (length(pos) < 5.0) {
+            success = true;
+            return length(pos-eye);
+            //}
+        }
+    }
+}
 
-    // raytrace
-	float tmin = 10000.0;
-	vec3  nor = vec3(0.0);
-	float occ = 1.0;
-	vec3  pos = vec3(0.0);
-	
-	// raytrace-plane
-	float h = (0.0-ro.y)/rd.y;
-	if( h>0.0 ) 
-	{ 
-		tmin = h; 
-		nor = vec3(0.0,1.0,0.0); 
-		pos = ro + h*rd;
-		vec3 di = sc - pos;
-		float l = length(di);
-		occ = 1.0 - dot(nor,di/l)*1.0*1.0/(l*l); 
-	}
+vec3 normal(vec3 pos)
+{
+    return normalize(gradient(pos));
+}
 
-	// raytrace-sphere
-	vec3  ce = ro - sc;
-	float b = dot( rd, ce );
-	float c = dot( ce, ce ) - 1.0;
-	h = b*b - c;
-	if( h>0.0 )
-	{
-		h = -b - sqrt(h);
-		if( h<tmin ) 
-		{ 
-			tmin=h; 
-			nor = normalize(ro+h*rd-sc); 
-			occ = 0.5 + 0.5*nor.y;
-		}
-	}
+float raymarch_hyperbola(vec3 eye, vec3 ray_dir, out bool success)
+{
+    //float iTime = 0.0f;
 
-    // shading/lighting	
-	vec3 col = vec3(0.9);
-	if( tmin<100.0 )
-	{
-	    pos = ro + tmin*rd;
+    vec3 e1 = vec3(3.0+2.0*cos(iTime), 2.0+2.0*cos(iTime), 4.0+2.0*cos(iTime));
+    vec3 e2 = vec3(-3, 0, 4);
+    
+    float tdoa = 3.0+2.0*sin(iTime);
+    
+    float delta = 0.06;
+    
+    success = false;
+    
+    vec3 pos = eye;
+    
+    for (int i = 0; i < 100; i++)
+    {
+        delta += 0.006;
+        pos += delta*ray_dir;
+        //evaluate how close we are to satisfying the eq
+        float d = evaluate_equation(pos);
+    
+        if (d < 0.1) {
+            //if (length(pos) < 15.0) {
+            success = true;
+            return length(pos-eye);
+            //}
+        }
+    }
+}
 
-        vec4 n = noised( 12.0*pos );
-        col = 0.5 + 0.5*((p.x>0.0)?n.yzw:n.xxx);
-		
-		col = mix( col, vec3(0.9), 1.0-exp( -0.003*tmin*tmin ) );
-	}
-	
-	
-	fragColor = vec4( col, 1.0 );
+float rand(vec2 co){
+    return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453);
+}
+
+void main() {
+
+    vec4 unproj_pos = inv_view_projection * vec4(Position.xy, 1, 1);
+	unproj_pos  = unproj_pos / unproj_pos.w;
+	vec3 world_pos = unproj_pos.xyz;
+
+	vec3 ray = normalize(world_pos - camera_position);
+
+    vec3 dark = vec3(0.2, 0.0,0.1) * (1+max(min(world_pos.x/10, -0.3), 0.3));
+    vec3 dusk = vec3(0.1, 0.1, 0.3);
+
+    float n = rand(world_pos.zy/100);
+
+    if (n > 0.999)
+    {
+        float star_n = rand(world_pos.zy+1234);
+        float star_g = 1;//rand(world_pos.zy+5123.45);
+        float star_b = 1;//rand(world_pos.zy+162.45);
+        vec3 star = star_n*vec3(1,0.5+0.5*star_g,0.5+0.5*star_b)*(star_brightness+1);
+        dusk = star;
+    }
+
+    FragColor = vec4(mix(dark, dusk, world_pos.z/100), 1);
+
 }

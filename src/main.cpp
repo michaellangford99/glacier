@@ -17,6 +17,7 @@
 
 #include "camera.h"
 #include "triangles.h"
+#include "line.h"
 #include "shader.h"
 #include "terrain.h"
 #include "texture.h"
@@ -43,8 +44,10 @@ public:
 	float t=0.0f;
 	Shader* fullscreen_shader;
 	Shader* grass_shader;
+	Shader* test_shader;
 	std::shared_ptr<Shader> arb_function_shader;
 	triangle_geometry* fullscreen_quad;
+	line_geometry* quad_lines;
 
 	std::shared_ptr<texture> grass_texture;
 	std::shared_ptr<texture> mask_texture;
@@ -250,11 +253,32 @@ int main()
 	return 0;
 }
 
+void add_limbs(std::vector<vertex>& vertices, glm::vec3 pos, glm::vec3 dir, float length, int depth)
+{
+	vertex v = {{pos},
+				{0, 0, 0},
+				{0, 0},
+				{1, 1, 1}};
+	vertices.push_back(v);
+
+	if (depth > 0)
+	{
+		glm::vec3 offset1 = glm::linearRand(glm::vec3(-0.5, -0.5, -0.3), glm::vec3(0.5, 0.5, 0.3));
+		glm::vec3 offset2 = glm::linearRand(glm::vec3(-0.5, -0.5, -0.3), glm::vec3(0.5, 0.5, 0.3));
+		glm::vec3 offset3 = glm::linearRand(glm::vec3(-0.5, -0.5, -0.3), glm::vec3(0.5, 0.5, 0.3));
+		glm::vec3 offset4 = glm::linearRand(glm::vec3(-0.5, -0.5, -0.3), glm::vec3(0.5, 0.5, 0.3));
+		add_limbs(vertices, pos+length*dir, offset1+glm::normalize(dir+glm::vec3(-0.3f,0.0f, 0.0f)), length*0.8f, depth-1);
+		add_limbs(vertices, pos+length*dir, offset2+glm::normalize(dir+glm::vec3(0.6f,0.0f, 0.0f)), length*0.5f, depth-1);
+		add_limbs(vertices, pos+length*dir, offset3+glm::normalize(dir+glm::vec3(0.0f,-0.2f, 0.0f)), length*0.6f, depth-1);
+		add_limbs(vertices, pos+length*dir, offset4+glm::normalize(dir+glm::vec3(0.0f,0.4f, 0.0f)), length*0.7f, depth-1);
+	}
+}
+
 glacier::glacier(GLFWwindow* _window) : window(_window)
 {
 	setup_camera(window);
 	camera.update_view_projection();
-	camera.look_at = glm::vec3(0,0.1,0);
+	camera.look_at = glm::vec3(0,0,0);
 
 	setup_imgui(window);
 
@@ -268,6 +292,7 @@ glacier::glacier(GLFWwindow* _window) : window(_window)
 
 	//setup shaders
 	fullscreen_shader = new Shader("vertex.glsl", "test_fullscreen_shader.glsl");
+	test_shader = new Shader("vertex.glsl", "debug_fragment.glsl");
 	
 	//TODO fix capital/non capital letter scheme
 	grass_shader = new Shader("vertex.glsl", "grass.glsl");
@@ -306,12 +331,17 @@ glacier::glacier(GLFWwindow* _window) : window(_window)
 
 	fullscreen_quad = new triangle_geometry(plane_vertices, plane_indices);
 
+	std::vector<vertex> tree;
+	add_limbs(tree, {0,0,0}, {0, 0, 1}, 1.0f, 10);
+
+	quad_lines = new line_geometry(tree);
+
 	glm::vec3 origin_lla = glm::vec3(32, -111, 2389.0f/3.0);
 
-	test_tile  = std::make_shared<terrain_tile>("N31W111.hgt", 20, glm::vec3(31.0f,-111.0f, 0.0), origin_lla);
-	test_tile2 = std::make_shared<terrain_tile>("N31W112.hgt", 20, glm::vec3(31.0f,-112.0f, 0.0), origin_lla);
-	test_tile3 = std::make_shared<terrain_tile>("N32W111.hgt", 20, glm::vec3(32.0f,-111.0f, 0.0), origin_lla);
-	test_tile4 = std::make_shared<terrain_tile>("N32W112.hgt", 20, glm::vec3(32.0f,-112.0f, 0.0), origin_lla);
+	test_tile  = std::make_shared<terrain_tile>("N31W111.hgt", 4, glm::vec3(31.0f,-111.0f, 0.0), origin_lla);
+	test_tile2 = std::make_shared<terrain_tile>("N31W112.hgt", 4, glm::vec3(31.0f,-112.0f, 0.0), origin_lla);
+	test_tile3 = std::make_shared<terrain_tile>("N32W111.hgt", 4, glm::vec3(32.0f,-111.0f, 0.0), origin_lla);
+	test_tile4 = std::make_shared<terrain_tile>("N32W112.hgt", 4, glm::vec3(32.0f,-112.0f, 0.0), origin_lla);
 
 	root = std::make_shared<element>();
 	root->children.push_back(test_tile);
@@ -337,7 +367,27 @@ void glacier::run()
 
 	camera.update_view_projection();
 
-	bool draw_terrain = false;
+	bool draw_fullscreen_shader = true;
+	if (draw_fullscreen_shader)
+	{
+		//bind / apply shader?
+		fullscreen_shader->bind();
+
+		fullscreen_shader->set_imgui_uniforms();
+
+		glm::mat4 identity = glm::mat4(1.0);
+
+		fullscreen_shader->set_uniform("model", identity);
+		fullscreen_shader->set_uniform("view", identity);
+		fullscreen_shader->set_uniform("projection", identity);
+		fullscreen_shader->set_uniform("inv_view_projection", glm::inverse(camera.projection * camera.view));
+
+		glDepthMask(false);
+		fullscreen_quad->draw();
+		glDepthMask(true);
+	}
+
+	bool draw_terrain = true;
 	if (draw_terrain)
 	{
 		test_tile->update();
@@ -353,7 +403,7 @@ void glacier::run()
 		test_tile4->draw(glm::mat4(1.0), camera);
 	}
 
-	bool draw_grass_tiles = true;
+	bool draw_grass_tiles = false;
 	if (draw_grass_tiles)
 	{
 		glEnable(GL_BLEND);
@@ -365,7 +415,7 @@ void glacier::run()
 		for (int i = 0; i < max; i++)
 		{
 			glm::mat4 world = glm::mat4(1.0);
-			world = glm::translate(world, glm::vec3(0,0,0.1*(double)i/(double)max));
+			world = glm::translate(world, glm::vec3(0,0,20.1*(double)i/(double)max));
 
 			glm::mat4& view = camera.view;
 			glm::mat4& projection = camera.projection;
@@ -389,48 +439,25 @@ void glacier::run()
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  
 
-		grass_shader->bind();
+		test_shader->bind();
 		
-		int max = 256;
-		for (int i = 0; i < max; i++)
-		{
-			glm::mat4 world = glm::mat4(1.0);
-			world = glm::translate(world, glm::vec3(0,0,0.1*(double)i/(double)max));
+		//int max = 256;
+		//for (int i = 0; i < max; i++)
+		//{
+			glm::mat4 world = glm::scale(glm::mat4(1.0), glm::vec3(0.2, 0.2, 0.2));
+			//world = glm::translate(world, glm::vec3(0,0,0.1*(double)i/(double)max));
 
 			glm::mat4& view = camera.view;
 			glm::mat4& projection = camera.projection;
 
-			grass_shader->set_uniform("model", world);
-			grass_shader->set_uniform("view", view);
-			grass_shader->set_uniform("projection", projection);
-			grass_shader->set_uniform("inv_view_projection", glm::inverse(projection * view));
-			grass_shader->set_uniform("camera_position", camera.position);
-			grass_shader->set_uniform("t", t);
+			test_shader->set_uniform("model", world);
+			test_shader->set_uniform("view", view);
+			test_shader->set_uniform("projection", projection);
 
-			grass_shader->set_imgui_uniforms();
+			test_shader->set_imgui_uniforms();
 
-			fullscreen_quad->draw();
-		}
-	}
-
-	bool draw_fullscreen_shader = false;
-	if (draw_fullscreen_shader)
-	{
-		//bind / apply shader?
-		fullscreen_shader->bind();
-
-		fullscreen_shader->set_imgui_uniforms();
-
-		glm::mat4 identity = glm::mat4(1.0);
-
-		glUniformMatrix4fv(glGetUniformLocation(fullscreen_shader->ID, "model"), 1, GL_FALSE, glm::value_ptr(identity));
-		glUniformMatrix4fv(glGetUniformLocation(fullscreen_shader->ID, "view"), 1, GL_FALSE, glm::value_ptr(identity));
-		glUniformMatrix4fv(glGetUniformLocation(fullscreen_shader->ID, "projection"), 1, GL_FALSE, glm::value_ptr(identity));
-
-		glUniform3f(glGetUniformLocation(fullscreen_shader->ID, "iResolution"), camera.viewport_width, camera.viewport_height, 0);
-		//glUniform1f(glGetUniformLocation(fullscreen_shader->ID, "iTime"), frame_time);
-
-		fullscreen_quad->draw();
+			quad_lines->draw();
+		//}
 	}
 
 	bool draw_arb_func_shader = false;
@@ -461,6 +488,7 @@ void glacier::run()
 glacier::~glacier()
 {
 	delete fullscreen_shader;
+	delete quad_lines;
 
 	// Deletes all ImGUI instances
 	ImGui_ImplOpenGL3_Shutdown();
