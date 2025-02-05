@@ -98,7 +98,7 @@ texture::texture(std::string path)
 	return texture;
 }*/
 
-texture::texture(void* data, int width, int height, int channels, int bytes_per_channel, unsigned int gl_format, unsigned int gl_internal_format, unsigned int gl_type)
+texture::texture(void* data, int width, int height, int channels, int bytes_per_channel, unsigned int gl_format, unsigned int gl_internal_format, unsigned int gl_type) : width(width), height(height)
 {
 	glGenTextures(1, &gl_texture_id);
 	glBindTexture(GL_TEXTURE_2D, gl_texture_id);
@@ -116,7 +116,7 @@ texture::texture(void* data, int width, int height, int channels, int bytes_per_
 }
 
 //for arbitrary data in binary blob
-texture::texture(std::string path, int width, int height, int channels, int bytes_per_channel, unsigned int gl_format, unsigned int gl_internal_format, unsigned int gl_type, bool byte_swap)
+texture::texture(std::string path, int width, int height, int channels, int bytes_per_channel, unsigned int gl_format, unsigned int gl_internal_format, unsigned int gl_type, bool byte_swap) : width(width), height(height)
 {
 	glGenTextures(1, &gl_texture_id);
 	glBindTexture(GL_TEXTURE_2D, gl_texture_id);
@@ -177,9 +177,11 @@ void update_rgb_texture(unsigned int texture, unsigned char* data, unsigned int 
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
+//TODO: create resize function for textures
+//TODO: create set function for active texture index
 void texture::bind()
 {	
-	glActiveTexture(active_texture_index);
+	glActiveTexture(GL_TEXTURE0 + active_texture_index);
 	glBindTexture(GL_TEXTURE_2D, gl_texture_id);
 }
 
