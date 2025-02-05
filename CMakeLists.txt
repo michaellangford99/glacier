@@ -45,6 +45,7 @@ set(MY_RESOURCE_FILES
                         src/simple_fs_shader.glsl
                         src/terrain.glsl
                         src/test_fullscreen_shader.glsl
+                        src/arb_function.glsl
 
                         src/grass.glsl
 
@@ -113,7 +114,8 @@ target_include_directories(glacier
 target_link_libraries(glacier
     PRIVATE
         #libs
-        ${PROJECT_SOURCE_DIR}/../lib/glfw3.lib
+        libglfw.so.3
+        GL
 )
 
 set(CMAKE_CXX_STANDARD 11)
