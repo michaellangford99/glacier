@@ -45,6 +45,25 @@ struct uniform_descriptor {
 		float max;
 };
 
+//
+/*
+
+class matrix_viewer
+{
+public:
+
+framebuffer fb
+
+glm::mat4 matrix;
+
+Camera camera;
+
+glm::vec2 render_area
+
+}
+
+*/
+
 class Shader
 {
 public:

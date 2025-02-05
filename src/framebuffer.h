@@ -32,6 +32,7 @@ class framebuffer
 {
 public:
     unsigned int ID_framebuffer;
+    //TODO switch to glm::vec2 size?
     unsigned int width;
     unsigned int height;
 
