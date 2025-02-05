@@ -76,6 +76,9 @@ void volume::generate_imgui_editor()
 
 void volume::draw(glm::mat4 parent_world, Camera& camera)
 {
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  
+
 	volume_shader->bind();
 
 	//update view and pull view matrix out

@@ -13,6 +13,11 @@ uniform mat4 projection;
 uniform mat4 inv_view_projection;
 uniform vec3 camera_position;
 
+uniform float m;
+uniform float n;
+
+uniform vec3 volume_color;
+
 void main() {
     vec4 unproj_pos = inv_view_projection * vec4(Position);
 	unproj_pos  = unproj_pos / unproj_pos.w;
@@ -34,7 +39,7 @@ void main() {
 
     float delta = b*b - 4*a*c;
 
-    if (delta < 0) discard;
+    //if (delta < 0) discard;
     //else FragColor = vec4(1, 1, 1, 1);
 
     float t0 = (-b+sqrt(delta))/(2*a);
@@ -45,7 +50,9 @@ void main() {
 
     float dist = length(p0-p1);
 
-    FragColor = vec4(vec3(1,1,1)*dist, 1);
+    //float atten = 
+
+    FragColor = vec4(volume_color, dist*exp(m*dist)/n);
 
     //FragColor = vec4(WorldPosition.xyz/WorldPosition.w - world_pos, 1);
 
