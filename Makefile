@@ -11,7 +11,8 @@ INC := include
 CONTENT := content
 
 # Build directories and output
-TARGET := $(BIN)/glacier
+TARGET_PROJECT := glacier
+TARGET := $(BIN)/$(TARGET_PROJECT)/$(TARGET_PROJECT)
 BUILD := build
 
 # Library search directories and flags
@@ -20,7 +21,7 @@ LDFLAGS := -pthread -ldl -lglfw -lfreetype
 LDPATHS := $(addprefix -L,$(LIB) $(EXT_LIB))
 
 # Include directories
-INC_DIRS := $(INC) $(wildcard $(SRC)/*/) $(INC)/glm /usr/include/freetype2
+INC_DIRS := $(INC) $(wildcard $(SRC)/*/) $(INC)/glm /usr/include/freetype2 $(SRC)/.
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 
 # Construct build output and dependency filenames.
@@ -31,7 +32,7 @@ IMGUI_SRCS := $(wildcard $(IMGUI_SRC_DIR)/*.cpp) \
 			  $(IMGUI_SRC_DIR)/misc/freetype/imgui_freetype.cpp	  
 
 #SRCS := $(shell find src -name '*.c') $(shell find src -name '*.cpp')
-SRCS := $(wildcard $(SRC)/*.cpp $(SRC)/*.c) $(IMGUI_SRCS)
+SRCS := $(wildcard $(SRC)/$(TARGET_PROJECT)/*.cpp $(SRC)/$(TARGET_PROJECT)/*.c) $(IMGUI_SRCS)
 OBJS := $(subst $(SRC)/,$(BUILD)/,$(addsuffix .o,$(basename $(SRCS))))
 DEPS := $(OBJS:.o=.d)
 
@@ -40,11 +41,13 @@ GLSL := $(subst $(SRC)/,$(BIN)/,$(shell find $(SRC) -name '*.glsl'))
 FONT := $(subst $(SRC)/,$(BIN)/,$(shell find $(SRC) -name '*.ttf'))
 CONTENT_TARGETS := $(subst $(CONTENT)/,$(BIN)/,$(wildcard content/*))
 
+TEST_TARGETS := a b c d e
+
 # Build task
 build: all
 
 # Main task
-all: $(TARGET) $(GLSL) $(FONT) $(CONTENT_TARGETS)
+all: $(TARGET) $(GLSL) $(FONT) $(CONTENT_TARGETS) $(TEST_TARGETS)
 #	@echo $(SRCS)
 #	@echo $<
 
@@ -77,6 +80,21 @@ $(BIN)/%.ttf: $(SRC)/%.ttf
 $(BIN)/%: $(CONTENT)/%
 	@mkdir -p $(dir $@)
 	cp $< $@
+
+$(TEST_TARGETS):
+	@echo $@
+
+#OK. so each of TEST_TARGET depends on GLACIER
+#GLACIER depends on all the content file copies I guess (not sure, maybe split that into each one? sounds like a waste)
+#and then make all makes all the tests, glacier, copies all content
+#and you can specify make glacier
+#make volume_test etc. and so on
+
+#OK but what about where the executable should go?
+#going to put it in subdirectory but execute from root bin. seems a little janky.....
+
+#also copy all headers to inc/ directory on make so that we can use <> to access headers non-locally?
+#and not depend on Make to fix paths for us
 
 # Clean task
 .PHONY: clean

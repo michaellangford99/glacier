@@ -61,7 +61,7 @@ volume::volume()
 
 	//---- set up volume shader ----
     
-	volume_shader = std::unique_ptr<Shader>(new Shader("vertex.glsl", "volume.glsl"));
+	volume_shader = std::unique_ptr<Shader>(new Shader("glacier/vertex.glsl", "glacier/volume.glsl"));
 	//volume_shader->set_uniform("terrain_intensity", 1.6f);
 	//volume_shader->set_uniform("terrain_color", glm::vec3(0.2,0.2,0.2));
 	//volume_shader->set_uniform("normal_map", normal_map.get());

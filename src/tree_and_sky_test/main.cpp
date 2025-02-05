@@ -15,13 +15,13 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 
-#include "camera.h"
-#include "triangles.h"
-#include "line.h"
-#include "shader.h"
-#include "terrain.h"
-#include "texture.h"
-#include "volume.h"
+#include "glacier/camera.h"
+#include "glacier/triangles.h"
+#include "glacier/line.h"
+#include "glacier/shader.h"
+#include "glacier/terrain.h"
+#include "glacier/texture.h"
+#include "glacier/volume.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -294,11 +294,11 @@ glacier::glacier(GLFWwindow* _window) : window(_window)
 	window_size = viewport_size;
 
 	//setup shaders
-	fullscreen_shader = new Shader("vertex.glsl", "test_fullscreen_shader.glsl");
-	test_shader = new Shader("vertex.glsl", "debug_fragment.glsl");
+	fullscreen_shader = new Shader("glacier/vertex.glsl", "glacier/test_fullscreen_shader.glsl");
+	test_shader = new Shader("glacier/vertex.glsl", "glacier/debug_fragment.glsl");
 	
 	//TODO fix capital/non capital letter scheme
-	grass_shader = new Shader("vertex.glsl", "grass.glsl");
+	grass_shader = new Shader("glacier/vertex.glsl", "glacier/grass.glsl");
 	grass_texture = std::shared_ptr<texture>(new texture("noise.png"));
 	mask_texture = std::shared_ptr<texture>(new texture("noise_perlin.png"));
 
@@ -356,7 +356,7 @@ glacier::glacier(GLFWwindow* _window) : window(_window)
 
 	root->children.push_back(test_volume);
 
-	arb_function_shader = std::shared_ptr<Shader>(new Shader("vertex.glsl", "arb_function.glsl"));
+	arb_function_shader = std::shared_ptr<Shader>(new Shader("glacier/vertex.glsl", "glacier/arb_function.glsl"));
 }
 
 void glacier::run()
