@@ -13,5 +13,5 @@ in vec3 Color;
 
 void main()
 {
-	FragColor = vec4(TexCoord.xy, fract(iTime), 1.0 );
+	FragColor = vec4(TexCoord.xy, fract(iTime), 0.2f );
 }

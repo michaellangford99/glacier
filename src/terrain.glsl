@@ -27,7 +27,7 @@ void main()
 
 	vec3 line_color = vec3(0,0,0.4);
 	float spacing = 1000.0;
-	vec2 xy_mod = ((TexCoord*3601.0) % spacing) - spacing/2.0;
+	vec2 xy_mod = mod(TexCoord*3601.0, spacing) - spacing/2.0;
 
 	float k=5.0;
 	float line_intensity = max(exp(-k*(xy_mod.x*xy_mod.x)),exp(-k*(xy_mod.y*xy_mod.y)));
