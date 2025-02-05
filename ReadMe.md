@@ -125,7 +125,7 @@ X build system via Make
 - debug draw for 2D and 3D
 - shader.cpp
 - texture.cpp
-- main fixed and cleaned
+X main fixed and cleaned
 - framebuffer.cpp
 - renderer.cpp
 - generic settings editor that shader uses
@@ -214,12 +214,40 @@ https://casual-effects.blogspot.com/2014/04/fast-terrain-rendering-with-continuo
 ---
 
 TODO: for art:
-camera pan / change target
-camera refactor to precompute inv view proj
-parameter class
-- serialize and deserialize parameter sets
-- load textures from file
-- load shaders from file
-- make parameters drive other parameters
-- link and unlink parameters
-save effects and demo code somehow in a way that is separate from the library-ish code
+- separate into library and demos
+  - cna quickly write demo code
+  - then integrate it into classes for reuse at leisure
+  - and then individual art projects are kept operational without being cannabilized each time I do something new
+- camera pan / change target
+- initial renderer.cpp that can handle basic opaque plus translucent layering
+  - then add on top of that the 2D post process stuff
+- camera refactor to precompute inv view proj
+- singleton classes for basic shapes
+- parameter class
+  - serialize and deserialize parameter sets
+    - gracefully save a nd load textures from file
+      including framebuffers
+  - load textures from file
+  - load shaders from file
+  - make parameters drive other parameters
+  - link and unlink parameters
+  - provide parameters as inputs to stuff. somehow mark parameters as to whether they are an input vs an output
+
+- parameter class encapsulating specific draw mode settings
+- 2D draw layer and post process base class
+- save effects and demo code somehow in a way that is separate from the library-ish code
+- save shaders to specific folder?
+- library of shader functions somehow pulled together by a compiler add-in or something in shader.cpp
+
+lower:
+- matrix viewer
+- contained frame viewer
+- gizmo
+
+for engineering
+- compass
+- track type
+- list viewer
+- plotting
+- python tie-ins
+  - numpy?
