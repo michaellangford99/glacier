@@ -27,6 +27,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "ImGuizmo/ImGuizmo.h"
+
 class glacier
 {
 public:
@@ -181,6 +183,8 @@ void glacier::generate_tree_imgui_editor()
 	}
 }
 
+glm::mat4 test_matrix = glm::mat4(1.0f);
+
 void glacier::layout_draw_imgui()
 {
 	// Tell OpenGL a new frame is about to begin
@@ -188,11 +192,49 @@ void glacier::layout_draw_imgui()
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
 
+	ImGuizmo::BeginFrame();
+	ImGuizmo::Enable(true);
+
 	ImGuiID id = ImGui::DockSpaceOverViewport(0, nullptr, ImGuiDockNodeFlags_NoDockingInCentralNode | ImGuiDockNodeFlags_PassthruCentralNode, nullptr);
 	ImGuiDockNode* node = ImGui::DockBuilderGetCentralNode(id);
 
+	static ImGuizmo::OPERATION mCurrentGizmoOperation(ImGuizmo::ROTATE);
+    static ImGuizmo::MODE mCurrentGizmoMode(ImGuizmo::WORLD);
+    
+	static bool is_bounds_enabled = false;
+
+	ImGuiIO& io = ImGui::GetIO();
+    ImGuizmo::SetRect(node->Pos.x, node->Pos.y, node->Size.x, node->Size.y);
+    float bounds[] = {1,-1,1,-1,1,-1,1,-1,1,-1,1,-1,1,-1,1,-1};
+	ImGuizmo::Manipulate(glm::value_ptr(camera.view), glm::value_ptr(camera.projection), mCurrentGizmoOperation, mCurrentGizmoMode, glm::value_ptr(test_matrix),
+	NULL, NULL, is_bounds_enabled ? bounds : NULL, NULL);
+
+	//ImGuizmo::DrawGrid(glm::value_ptr(camera.view), glm::value_ptr(camera.projection), glm::value_ptr(test_matrix), 4);
+
+
 	// ImGUI window creation
 	ImGui::Begin("Settings");
+
+	if (ImGui::RadioButton("Translate", mCurrentGizmoOperation == ImGuizmo::TRANSLATE))
+        mCurrentGizmoOperation = ImGuizmo::TRANSLATE;
+    ImGui::SameLine();
+    if (ImGui::RadioButton("Rotate", mCurrentGizmoOperation == ImGuizmo::ROTATE))
+        mCurrentGizmoOperation = ImGuizmo::ROTATE;
+    ImGui::SameLine();
+    if (ImGui::RadioButton("Scale", mCurrentGizmoOperation == ImGuizmo::SCALE))
+        mCurrentGizmoOperation = ImGuizmo::SCALE;
+    ImGui::SameLine();
+    if (ImGui::RadioButton("Bounds", mCurrentGizmoOperation == ImGuizmo::BOUNDS))
+        mCurrentGizmoOperation = ImGuizmo::BOUNDS;
+
+	
+    if (ImGui::RadioButton("Local", mCurrentGizmoMode == ImGuizmo::LOCAL))
+        mCurrentGizmoMode = ImGuizmo::LOCAL;
+    ImGui::SameLine();
+    if (ImGui::RadioButton("World", mCurrentGizmoMode == ImGuizmo::WORLD))
+        mCurrentGizmoMode = ImGuizmo::WORLD;
+
+	ImGui::Checkbox("Bounds Enabled?", &is_bounds_enabled);
 
 	//TODO: add here to loop through any items that have registered to have an editor
 
@@ -451,7 +493,7 @@ void glacier::run()
 		//int max = 256;
 		//for (int i = 0; i < max; i++)
 		//{
-			glm::mat4 world = glm::scale(glm::mat4(1.0), glm::vec3(0.2, 0.2, 0.2));
+			glm::mat4 world = glm::scale(test_matrix, glm::vec3(0.2, 0.2, 0.2));
 			//world = glm::translate(world, glm::vec3(0,0,0.1*(double)i/(double)max));
 
 			glm::mat4& view = camera.view;

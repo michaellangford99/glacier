@@ -30,8 +30,11 @@ IMGUI_SRCS := $(wildcard $(IMGUI_SRC_DIR)/*.cpp) \
 			  $(IMGUI_SRC_DIR)/backends/imgui_impl_glfw.cpp \
 			  $(IMGUI_SRC_DIR)/misc/freetype/imgui_freetype.cpp	  
 
+IMGUIZMO_SRC_DIR := $(SRC)/ImGuizmo
+IMGUIZMO_SRCS := $(wildcard $(IMGUIZMO_SRC_DIR)/*.cpp)
+
 #SRCS := $(shell find src -name '*.c') $(shell find src -name '*.cpp')
-SRCS := $(wildcard $(SRC)/*.cpp $(SRC)/*.c) $(IMGUI_SRCS)
+SRCS := $(wildcard $(SRC)/*.cpp $(SRC)/*.c) $(IMGUI_SRCS) $(IMGUIZMO_SRCS)
 OBJS := $(subst $(SRC)/,$(BUILD)/,$(addsuffix .o,$(basename $(SRCS))))
 DEPS := $(OBJS:.o=.d)
 
