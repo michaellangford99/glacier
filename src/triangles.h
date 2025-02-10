@@ -28,6 +28,13 @@ struct vertex
 	glm::vec3 normal;
 	glm::vec2 texcoord;
 	glm::vec3 color;
+
+	vertex() {};
+
+	vertex(glm::vec3 position,
+		   glm::vec3 normal,
+		   glm::vec2 texcoord,
+		   glm::vec3 color) : position(position), normal(normal), texcoord(texcoord), color(color) {};
 };
 
 class triangle_geometry

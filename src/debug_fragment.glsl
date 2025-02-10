@@ -7,6 +7,8 @@ in vec3 Normal;
 in vec2 TexCoord;
 in vec3 Color;
 
+uniform vec3 debug_color;
+
 //uniform sampler2D normal_map;
 
 //uniform mat4 inv_view_projection;
@@ -18,5 +20,5 @@ in vec3 Color;
 
 void main()
 {
-	FragColor = vec4(Color, 0.2f);
+	FragColor = vec4(debug_color, 1.0);
 }
