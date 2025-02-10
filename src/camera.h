@@ -28,8 +28,11 @@ private:
 	float pitch = 0.01f;
 	float radius = 10.0f;
 
+	float mouse_xpos, mouse_ypos;
 	float lastX = 400, lastY = 300;
-	bool mouse_down = false;
+	bool left_mouse_down = false;
+	bool right_mouse_down = false;
+	bool last_right_mouse_down = false;
 
 public:
 	float mouse_sensitivity = 0.005f;
@@ -38,15 +41,18 @@ public:
 	float near_plane = 0.5f;
 	float far_plane = 250.0f;
 
-	int viewport_width=800;
-	int viewport_height=600;
+	//TODO: switch to using these:
+	//viewport parameters
+	glm::vec2 viewport_pos;
+	glm::vec2 viewport_size = {800,600};
+	glm::vec2 window_size = {800,600};
 
 	glm::vec3 position;
 	glm::vec3 look_at = glm::vec3(0, 0, 0);
 
 	glm::mat4 view;
 	glm::mat4 projection;
-	//TODO: inverse_view_projection
+	glm::mat4 inverse_view_projection;
 
 	Camera(float _radius);
 
@@ -56,6 +62,8 @@ public:
 	void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 	void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 	void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+
+	void set_viewport(glm::vec2 _viewport_pos, glm::vec2 _viewport_size, glm::vec2 _window_size);
 };
 
 #endif

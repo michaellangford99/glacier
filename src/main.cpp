@@ -22,6 +22,7 @@
 #include "terrain.h"
 #include "texture.h"
 #include "volume.h"
+#include "debug_draw.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -372,6 +373,7 @@ void glacier::run()
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 
+	camera.set_viewport(viewport_pos, viewport_size, window_size);
 	camera.update_view_projection();
 
 	bool draw_fullscreen_shader = true;
@@ -387,7 +389,7 @@ void glacier::run()
 		fullscreen_shader->set_uniform("model", identity);
 		fullscreen_shader->set_uniform("view", identity);
 		fullscreen_shader->set_uniform("projection", identity);
-		fullscreen_shader->set_uniform("inv_view_projection", glm::inverse(camera.projection * camera.view));
+		fullscreen_shader->set_uniform("inv_view_projection", camera.inverse_view_projection);
 
 		glDepthMask(false);
 		fullscreen_quad->draw();
@@ -430,7 +432,7 @@ void glacier::run()
 			grass_shader->set_uniform("model", world);
 			grass_shader->set_uniform("view", view);
 			grass_shader->set_uniform("projection", projection);
-			grass_shader->set_uniform("inv_view_projection", glm::inverse(projection * view));
+			grass_shader->set_uniform("inv_view_projection", camera.inverse_view_projection);
 			grass_shader->set_uniform("camera_position", camera.position);
 			grass_shader->set_uniform("t", t);
 
@@ -460,6 +462,7 @@ void glacier::run()
 			test_shader->set_uniform("model", world);
 			test_shader->set_uniform("view", view);
 			test_shader->set_uniform("projection", projection);
+			test_shader->set_uniform("debug_color", glm::vec3(1,1,1));
 
 			test_shader->set_imgui_uniforms();
 
@@ -481,13 +484,16 @@ void glacier::run()
 		arb_function_shader->set_uniform("view", glm::mat4(1.0));
 		arb_function_shader->set_uniform("projection", glm::mat4(1.0));
 		arb_function_shader->set_uniform("iTime", t);
-		arb_function_shader->set_uniform("inv_view_projection", glm::inverse(projection * view));
+		arb_function_shader->set_uniform("inv_view_projection", camera.inverse_view_projection);
 		arb_function_shader->set_uniform("camera_position", camera.position);
 
 		arb_function_shader->set_imgui_uniforms();
 
 		fullscreen_quad->draw();
 	}
+
+	debug_draw::get_instance()->draw_queue(camera);
+	debug_draw::get_instance()->clear_queue();
 
 	layout_draw_imgui();
 
@@ -510,6 +516,8 @@ void glacier::set_render_area(glm::vec2 pos, glm::vec2 size)
 {
 	viewport_pos = pos;
 	viewport_size = size;
+	
+	camera.set_viewport(viewport_pos, viewport_size, window_size);
 }
 
 //TODO: pull these into the camera itself and set whether the camera is the 'active camera' somehow. idk.
