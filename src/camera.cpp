@@ -79,41 +79,6 @@ void Camera::mouse_callback(GLFWwindow* window, double xpos, double ypos)
 			if (pitch < -89.0f*glm::pi<float>() / 180.0f)
 				pitch = -89.0f*glm::pi<float>() / 180.0f;
 		}
-
-		if (right_mouse_down == true && last_right_mouse_down == false)
-		{
-			glm::vec4 mouse_pos = glm::vec4(2.0*(float)xpos/window_size.x - 1.0f,
-											2.0*(float)(window_size.y-ypos)/window_size.y - 1.0f,
-											-1, 1);
-
-			glm::vec4 mouse_look_at_v4 = inverse_view_projection * mouse_pos;
-			glm::vec3 mouse_look_at = glm::vec3(mouse_look_at_v4/mouse_look_at_v4.w);
-
-			//need to set look_at to intersection of ground plane and the look vector.
-			//first generate the ray from camera_position to look_at, normalized.
-
-			glm::vec3 ground_origin = glm::vec3(0,0,0);
-			glm::vec3 ground_normal = glm::vec3(0,0,1);
-
-			//this needs to be derived from the screen's click position lol
-			glm::vec3 camera_ray = glm::normalize(mouse_look_at - position);
-
-			float denom = glm::dot(camera_ray, ground_normal);
-			//TODO: check denom
-			if (denom != 0)
-			{
-				float t_intersect = glm::dot(ground_origin - position, ground_normal) / denom;
-
-				if (t_intersect > 0)
-				{
-					glm::vec3 new_look_at = position + camera_ray*t_intersect;
-					//debug_draw::get_instance()->draw_basis(glm::translate(glm::mat4(1.0), new_look_at), glm::vec3(0,1,0));
-
-					//TODO: reset angle values to retain the original position of the camera with the new look position;
-					look_at = new_look_at;
-				}
-			}
-		}
 	}
 }
 
@@ -153,7 +118,7 @@ void Camera::mouse_button_callback(GLFWwindow* window, int button, int action, i
 			glm::vec3 camera_ray = glm::normalize(mouse_look_at - position);
 
 			float denom = glm::dot(camera_ray, ground_normal);
-			//TODO: check denom
+			
 			if (denom != 0)
 			{
 				float t_intersect = glm::dot(ground_origin - position, ground_normal) / denom;
@@ -161,9 +126,15 @@ void Camera::mouse_button_callback(GLFWwindow* window, int button, int action, i
 				if (t_intersect > 0)
 				{
 					glm::vec3 new_look_at = position + camera_ray*t_intersect;
-					//debug_draw::get_instance()->draw_basis(glm::translate(glm::mat4(1.0), new_look_at), glm::vec3(0,1,0));
+					glm::vec3 new_camxyz = position-new_look_at;
 
-					//TODO: reset angle values to retain the original position of the camera with the new look position;
+					float new_yaw, new_pitch, new_radius;
+					new_radius = glm::length(new_camxyz);
+					new_pitch = glm::asin(new_camxyz.z/new_radius);
+					new_yaw = glm::atan(new_camxyz.y, new_camxyz.x);
+
+					yaw=new_yaw;
+					pitch = new_pitch;
 					look_at = new_look_at;
 				}
 			}
