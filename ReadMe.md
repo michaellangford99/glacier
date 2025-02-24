@@ -122,7 +122,8 @@ ideas:
 
 in order of importance
 X build system via Make
-- debug draw for 2D and 3D
+X debug draw for 3D
+  - and 3D
 - shader.cpp
 - texture.cpp
 X main fixed and cleaned
@@ -218,10 +219,11 @@ TODO: for art:
   - cna quickly write demo code
   - then integrate it into classes for reuse at leisure
   - and then individual art projects are kept operational without being cannabilized each time I do something new
-- camera pan / change target
+- camera pan
+X change target
 - initial renderer.cpp that can handle basic opaque plus translucent layering
   - then add on top of that the 2D post process stuff
-- camera refactor to precompute inv view proj
+X camera refactor to precompute inv view proj
 - singleton classes for basic shapes
 - parameter class
   - serialize and deserialize parameter sets
@@ -238,6 +240,8 @@ TODO: for art:
 - save effects and demo code somehow in a way that is separate from the library-ish code
 - save shaders to specific folder?
 - library of shader functions somehow pulled together by a compiler add-in or something in shader.cpp
+
+- Allow python to inject datasets
 
 lower:
 - matrix viewer
