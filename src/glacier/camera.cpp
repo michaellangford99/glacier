@@ -102,7 +102,6 @@ void Camera::mouse_button_callback(GLFWwindow* window, int button, int action, i
 		if (right_mouse_down == true && last_right_mouse_down == false)
 		{
 			//here must get region of inner window
-			
 			glm::vec2 mouse_local_pos = glm::vec2((float)(mouse_xpos - viewport_pos.x)/viewport_size.x,
 										   1.0f - (float)(mouse_ypos - viewport_pos.y)/viewport_size.y);
 

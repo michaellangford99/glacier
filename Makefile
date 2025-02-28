@@ -9,9 +9,6 @@ SRC := src
 LIB := lib
 INC := include
 CONTENT := content
-
-# Build directories and output
-TARGET := $(BIN)/glacier
 BUILD := build
 
 # Library search directories and flags
@@ -20,7 +17,7 @@ LDFLAGS := -pthread -ldl -lglfw -lfreetype
 LDPATHS := $(addprefix -L,$(LIB) $(EXT_LIB))
 
 # Include directories
-INC_DIRS := $(INC) $(wildcard $(SRC)/*/) $(INC)/glm /usr/include/freetype2
+INC_DIRS := $(INC) $(SRC) $(wildcard $(SRC)/*/) $(INC)/glm /usr/include/freetype2
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 
 # Construct build output and dependency filenames.
@@ -30,10 +27,22 @@ IMGUI_SRCS := $(wildcard $(IMGUI_SRC_DIR)/*.cpp) \
 			  $(IMGUI_SRC_DIR)/backends/imgui_impl_glfw.cpp \
 			  $(IMGUI_SRC_DIR)/misc/freetype/imgui_freetype.cpp	  
 
-#SRCS := $(shell find src -name '*.c') $(shell find src -name '*.cpp')
-SRCS := $(wildcard $(SRC)/*.cpp $(SRC)/*.c) $(IMGUI_SRCS)
+GLACIER_SRC_DIR := $(SRC)/glacier
+GLACIER_SRCS := $(wildcard $(GLACIER_SRC_DIR)/*.cpp $(GLACIER_SRC_DIR)/*.c)
+
+GLACIER_TARGET := $(BIN)/glacier_lib.a
+
+DEMO_0_TARGET := $(BIN)/target/demo_0
+
+SRCS := $(GLACIER_SRCS) $(IMGUI_SRCS)
 OBJS := $(subst $(SRC)/,$(BUILD)/,$(addsuffix .o,$(basename $(SRCS))))
-DEPS := $(OBJS:.o=.d)
+
+DEMO_SRC_DIR := $(SRC)/target/demo_0
+DEMO_SRCS := $(wildcard $(DEMO_SRC_DIR)/*.cpp $(DEMO_SRC_DIR)/*.c)
+DEMO_OBJS := $(subst $(SRC)/,$(BUILD)/,$(addsuffix .o,$(basename $(DEMO_SRCS))))
+
+ALL_OBJS := $(OBJS) $(DEMO_OBJS)
+DEPS := $(ALL_OBJS:.o=.d)
 
 # Generate target names for content files
 GLSL := $(subst $(SRC)/,$(BIN)/,$(shell find $(SRC) -name '*.glsl'))
@@ -44,17 +53,27 @@ CONTENT_TARGETS := $(subst $(CONTENT)/,$(BIN)/,$(wildcard content/*))
 build: all
 
 # Main task
-all: $(TARGET) $(GLSL) $(FONT) $(CONTENT_TARGETS)
+all: demo_0#here add the demo targets, and *they* will depend on glacier_lib
 #	@echo $(SRCS)
 #	@echo $<
 
+demo_0: glacier_lib $(DEMO_0_TARGET)
+
+glacier_lib: $(GLACIER_TARGET) $(GLSL) $(FONT) $(CONTENT_TARGETS)
+
+$(DEMO_0_TARGET): $(DEMO_OBJS)
+	@echo "🚧 Building..."
+	@mkdir -p $(dir $@)
+	$(CXX) $(DEMO_OBJS) $(GLACIER_TARGET) -o $@ $(LDPATHS) $(LDFLAGS)
+
 # Task producing target from built files
-$(TARGET): $(OBJS)
+$(GLACIER_TARGET): $(OBJS)
 	@echo "🚧 Building..."
 #	@echo $(INC_FLAGS)
 #	@echo $(SRCS)
 	@mkdir -p $(dir $@)
-	$(CXX) $(OBJS) -o $@ $(LDPATHS) $(LDFLAGS)
+	ar rcs $@ $^
+#	$(CXX) $(OBJS) -o $@ $(LDPATHS) $(LDFLAGS)
 
 # Compile all cpp files
 $(BUILD)/%.o: $(SRC)/%.c*
