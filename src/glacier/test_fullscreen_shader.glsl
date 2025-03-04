@@ -14,6 +14,9 @@ uniform float star_brightness;
 uniform mat4 inv_view_projection;
 uniform vec3 camera_position;
 
+uniform vec3 dusk_color;
+uniform vec3 dark_color;
+
 // Determine the unit vector to march along
 vec3 rayDirection(in float fieldOfView, in vec2 size, in vec2 frag_coord) {
     vec2 xy = frag_coord - size / 2.0;
@@ -145,8 +148,8 @@ void main() {
 
 	vec3 ray = normalize(world_pos - camera_position);
 
-    vec3 dark = vec3(0.2, 0.0,0.1) * (1+max(min(world_pos.x/10, -0.3), 0.3));
-    vec3 dusk = vec3(0.1, 0.1, 0.3);
+    vec3 dark = dark_color;// * (1+max(min(world_pos.x/10, -0.3), 0.3));
+    vec3 dusk = dusk_color;
 
     float n = rand(world_pos.zy/100);
 

@@ -13,6 +13,11 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+Camera::Camera() : Camera(10.0f)
+{
+	
+}
+
 Camera::Camera(float _radius)
 {
 	radius = _radius;

@@ -4,7 +4,7 @@
 debug_draw* debug_draw::instance = nullptr;
 
 debug_draw::debug_draw() {
-    debug_shader = std::shared_ptr<Shader>(new Shader("vertex.glsl", "debug_fragment.glsl"));
+    debug_shader = std::shared_ptr<Shader>(new Shader("glacier/vertex.glsl", "glacier/debug_fragment.glsl"));
 
     std::vector<vertex> vertices;
     vertices.push_back(vertex({0,0,0}, {0,0,0}, {0,0}, {0,0,0}));

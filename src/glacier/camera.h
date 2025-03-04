@@ -54,6 +54,7 @@ public:
 	glm::mat4 projection;
 	glm::mat4 inverse_view_projection;
 
+	Camera();
 	Camera(float _radius);
 
 	void generate_imgui_editor();

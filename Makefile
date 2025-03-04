@@ -30,18 +30,16 @@ IMGUI_SRCS := $(wildcard $(IMGUI_SRC_DIR)/*.cpp) \
 GLACIER_SRC_DIR := $(SRC)/glacier
 GLACIER_SRCS := $(wildcard $(GLACIER_SRC_DIR)/*.cpp $(GLACIER_SRC_DIR)/*.c)
 
-GLACIER_TARGET := $(BIN)/glacier_lib.a
+GLACIER_LIB_SRCS := $(GLACIER_SRCS) $(IMGUI_SRCS)
+GLACIER_LIB_OBJS := $(subst $(SRC)/,$(BUILD)/,$(addsuffix .o,$(basename $(GLACIER_LIB_SRCS))))
+GLACIER_LIB_TARGET := $(BIN)/glacier_lib.a
 
-DEMO_0_TARGET := $(BIN)/target/demo_0
+DEMO_0_SRC_DIR := $(SRC)/target/demo_0
+DEMO_0_SRCS := $(wildcard $(DEMO_0_SRC_DIR)/*.cpp $(DEMO_0_SRC_DIR)/*.c)
+DEMO_0_OBJS := $(subst $(SRC)/,$(BUILD)/,$(addsuffix .o,$(basename $(DEMO_0_SRCS))))
+DEMO_0_TARGET := $(subst $(SRC)/,$(BIN)/, $(addsuffix .gl,$(DEMO_0_SRC_DIR)))
 
-SRCS := $(GLACIER_SRCS) $(IMGUI_SRCS)
-OBJS := $(subst $(SRC)/,$(BUILD)/,$(addsuffix .o,$(basename $(SRCS))))
-
-DEMO_SRC_DIR := $(SRC)/target/demo_0
-DEMO_SRCS := $(wildcard $(DEMO_SRC_DIR)/*.cpp $(DEMO_SRC_DIR)/*.c)
-DEMO_OBJS := $(subst $(SRC)/,$(BUILD)/,$(addsuffix .o,$(basename $(DEMO_SRCS))))
-
-ALL_OBJS := $(OBJS) $(DEMO_OBJS)
+ALL_OBJS := $(GLACIER_LIB_OBJS) $(DEMO_0_OBJS)
 DEPS := $(ALL_OBJS:.o=.d)
 
 # Generate target names for content files
@@ -57,17 +55,17 @@ all: demo_0#here add the demo targets, and *they* will depend on glacier_lib
 #	@echo $(SRCS)
 #	@echo $<
 
-demo_0: glacier_lib $(DEMO_0_TARGET)
+demo_0: $(DEMO_0_TARGET)
 
-glacier_lib: $(GLACIER_TARGET) $(GLSL) $(FONT) $(CONTENT_TARGETS)
+glacier_lib: $(GLACIER_LIB_TARGET) $(GLSL) $(FONT) $(CONTENT_TARGETS)
 
-$(DEMO_0_TARGET): $(DEMO_OBJS)
+$(DEMO_0_TARGET): $(DEMO_0_OBJS) glacier_lib 
 	@echo "🚧 Building..."
 	@mkdir -p $(dir $@)
-	$(CXX) $(DEMO_OBJS) $(GLACIER_TARGET) -o $@ $(LDPATHS) $(LDFLAGS)
+	$(CXX) $(DEMO_0_OBJS) $(GLACIER_LIB_TARGET) -o $@ $(LDPATHS) $(LDFLAGS)
 
 # Task producing target from built files
-$(GLACIER_TARGET): $(OBJS)
+$(GLACIER_LIB_TARGET): $(GLACIER_LIB_OBJS)
 	@echo "🚧 Building..."
 #	@echo $(INC_FLAGS)
 #	@echo $(SRCS)

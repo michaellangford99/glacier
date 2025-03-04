@@ -156,7 +156,7 @@ terrain_tile::terrain_tile(std::string terrain_file, int decimation, glm::vec3 l
 	normal_map = std::shared_ptr<texture>(new texture(nullptr, 3601, 3601, 4, 2, GL_RGBA, GL_RGBA, GL_SHORT));
 	framebuffer fb = framebuffer(3601, 3601, normal_map);
 
-	normal_shader = std::unique_ptr<Shader>(new Shader("vertex.glsl", "height_to_normal.glsl"));
+	normal_shader = std::unique_ptr<Shader>(new Shader("glacier/vertex.glsl", "glacier/height_to_normal.glsl"));
 	normal_shader->set_uniform("height_map", height_map.get());
 	normal_shader->set_uniform("model", glm::mat4(1.0));
 	normal_shader->set_uniform("view", glm::mat4(1.0));
@@ -174,7 +174,7 @@ terrain_tile::terrain_tile(std::string terrain_file, int decimation, glm::vec3 l
 
 	//---- set up terrain shader ----
     
-	terrain_shader = std::unique_ptr<Shader>(new Shader("vertex.glsl", "terrain.glsl"));
+	terrain_shader = std::unique_ptr<Shader>(new Shader("glacier/vertex.glsl", "glacier/terrain.glsl"));
 	terrain_shader->set_uniform("terrain_intensity", 1.6f);
 	terrain_shader->set_uniform("terrain_color", glm::vec3(0.2,0.2,0.2));
 	terrain_shader->set_uniform("normal_map", normal_map.get());
