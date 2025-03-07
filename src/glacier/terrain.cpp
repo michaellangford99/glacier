@@ -178,6 +178,7 @@ terrain_tile::terrain_tile(std::string terrain_file, int decimation, glm::vec3 l
 	terrain_shader->set_uniform("terrain_intensity", 1.6f);
 	terrain_shader->set_uniform("terrain_color", glm::vec3(0.2,0.2,0.2));
 	terrain_shader->set_uniform("normal_map", normal_map.get());
+	terrain_shader->set_uniform("height_map", height_map.get());
 	terrain_shader->set_uniform("light_dir", glm::vec3(1.0, 0.3, 1.0));
 
 	//reference to origin
