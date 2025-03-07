@@ -215,7 +215,7 @@ https://casual-effects.blogspot.com/2014/04/fast-terrain-rendering-with-continuo
 ---
 
 TODO: for art:
-- separate into library and demos
+X separate into library and demos
   - cna quickly write demo code
   - then integrate it into classes for reuse at leisure
   - and then individual art projects are kept operational without being cannabilized each time I do something new
@@ -223,6 +223,7 @@ TODO: for art:
 X change target
 - initial renderer.cpp that can handle basic opaque plus translucent layering
   - then add on top of that the 2D post process stuff
+- abstract some startup and main stuff to make demos more specific code
 X camera refactor to precompute inv view proj
 - singleton classes for basic shapes
 - parameter class
