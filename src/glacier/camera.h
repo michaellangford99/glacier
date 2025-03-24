@@ -60,6 +60,10 @@ public:
 	void generate_imgui_editor();
 
 	void update_view_projection();
+
+	void set_pitch(float _pitch);
+	void set_yaw(float _yaw);
+
 	void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 	void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 	void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);

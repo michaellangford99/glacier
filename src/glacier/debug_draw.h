@@ -24,8 +24,12 @@ class debug_draw {
 private:
     static debug_draw* instance;
 
+public:
     std::shared_ptr<line_geometry> line;
+    std::shared_ptr<line_geometry> ones_line;
     std::shared_ptr<line_geometry> basis;
+
+private:
     std::shared_ptr<Shader> debug_shader;
 
     std::vector<debug_draw_request> debug_draw_queue;
@@ -48,6 +52,8 @@ public:
 
     void draw_queue(Camera camera);
     void clear_queue();
+
+    void draw_immediate(Camera camera, debug_draw_request request);
 
     static void destroy() {
         delete instance;

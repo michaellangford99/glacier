@@ -53,6 +53,16 @@ void Camera::set_viewport(glm::vec2 _viewport_pos, glm::vec2 _viewport_size, glm
 	window_size = _window_size;
 }
 
+void Camera::set_pitch(float _pitch)
+{
+	pitch = _pitch;
+}
+
+void Camera::set_yaw(float _yaw)
+{
+	yaw = _yaw;
+}
+
 void Camera::mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
 	//TODO: camera needs reference to its window and needs to bounds check this callback, not just for Imgui
