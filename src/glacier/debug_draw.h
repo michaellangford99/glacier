@@ -16,7 +16,7 @@
 
 struct debug_draw_request {
     glm::mat4 world;
-    glm::vec3 color;
+    glm::vec4 color;
     std::shared_ptr<line_geometry> lines;
 };
 
@@ -47,8 +47,8 @@ public:
         return instance;
     }
 
-    void draw_line(glm::vec3 start, glm::vec3 end, glm::vec3 color);
-    void draw_basis(glm::mat4 world, glm::vec3 color);
+    void draw_line(glm::vec3 start, glm::vec3 end, glm::vec4 color);
+    void draw_basis(glm::mat4 world, glm::vec4 color);
 
     void draw_queue(Camera camera);
     void clear_queue();

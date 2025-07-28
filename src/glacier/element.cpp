@@ -14,6 +14,15 @@ void element::generate_imgui_editor()
     ImGui::SliderFloat3("rotation", glm::value_ptr(rotation), -glm::pi<double>()*2, glm::pi<double>()*2);
 }
 
+glm::mat4 element::create_rotation(glm::mat4 world, glm::vec3 rotation)
+{
+    world = glm::rotate(world, rotation.x, glm::vec3(0,0,1));
+    world = glm::rotate(world, rotation.y, glm::vec3(1,0,0));
+    world = glm::rotate(world, rotation.z, glm::vec3(0,1,0));
+
+    return world;
+}
+
 void element::update()
 {
     //update world matrix

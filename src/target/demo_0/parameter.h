@@ -79,13 +79,13 @@ public:
         fb->bind_and_predraw();
 
         debug_draw_request ddr_basis;
-        ddr_basis.color = glm::vec3(1,1,1);
+        ddr_basis.color = glm::vec4(1,1,1, 1);
         ddr_basis.lines = debug_draw::get_instance()->basis;
         ddr_basis.world = glm::mat4(1.0);//element::create_rotation(glm::mat4(1.0), value);//glm::translate(glm::mat4(1.0), value);
         debug_draw::get_instance()->draw_immediate(camera, ddr_basis);
         
         debug_draw_request ddr;
-        ddr.color = glm::vec3(0,1,0);
+        ddr.color = glm::vec4(0,1,0,1);
         ddr.lines = debug_draw::get_instance()->ones_line;
         ddr.world = glm::scale(glm::mat4(1.0), value);//element::create_rotation(glm::mat4(1.0), value);//glm::translate(glm::mat4(1.0), value);
         debug_draw::get_instance()->draw_immediate(camera, ddr);

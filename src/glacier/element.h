@@ -36,6 +36,7 @@ public:
 
 	element();
 	virtual void generate_imgui_editor();
+	static glm::mat4 create_rotation(glm::mat4 world, glm::vec3 rotation);
 	virtual void update();
 	virtual void draw(glm::mat4 parent_world, Camera& camera);
 };

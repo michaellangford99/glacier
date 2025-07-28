@@ -27,7 +27,7 @@ debug_draw::debug_draw() {
     basis = std::shared_ptr<line_geometry>(new line_geometry(basis_vertices));
 }
 
-void debug_draw::draw_line(glm::vec3 start, glm::vec3 end, glm::vec3 color) {
+void debug_draw::draw_line(glm::vec3 start, glm::vec3 end, glm::vec4 color) {
     debug_draw_request ddr;
     ddr.color = color;
     ddr.lines = line;
@@ -36,7 +36,7 @@ void debug_draw::draw_line(glm::vec3 start, glm::vec3 end, glm::vec3 color) {
     debug_draw_queue.push_back(ddr);
 }
 
-void debug_draw::draw_basis(glm::mat4 world, glm::vec3 color) {
+void debug_draw::draw_basis(glm::mat4 world, glm::vec4 color) {
     debug_draw_request ddr;
     ddr.color = color;
     ddr.lines = basis;
