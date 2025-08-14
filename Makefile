@@ -25,7 +25,8 @@ IMGUI_SRC_DIR := $(SRC)/imgui
 IMGUI_SRCS := $(wildcard $(IMGUI_SRC_DIR)/*.cpp) \
 			  $(IMGUI_SRC_DIR)/backends/imgui_impl_opengl3.cpp \
 			  $(IMGUI_SRC_DIR)/backends/imgui_impl_glfw.cpp \
-			  $(IMGUI_SRC_DIR)/misc/freetype/imgui_freetype.cpp	  
+			  $(IMGUI_SRC_DIR)/misc/freetype/imgui_freetype.cpp	  \
+			  $(IMGUI_SRC_DIR)/misc/cpp/imgui_stdlib.cpp	  
 
 GLACIER_SRC_DIR := $(SRC)/glacier
 GLACIER_SRCS := $(wildcard $(GLACIER_SRC_DIR)/*.cpp $(GLACIER_SRC_DIR)/*.c)

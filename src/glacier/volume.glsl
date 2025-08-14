@@ -13,8 +13,8 @@ uniform mat4 projection;
 uniform mat4 inv_view_projection;
 uniform vec3 camera_position;
 
-uniform float m;
-uniform float n;
+float m = 0.467;
+float n = 7.5;
 
 uniform vec3 volume_color;
 

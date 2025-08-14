@@ -3,6 +3,7 @@
 
 volume::volume()
 {
+    premultiplied_alpha = true;
 	//geometry = std::unique_ptr<terrain_geometry>(new terrain_geometry(terrain_file, decimation));
 
     std::vector<vertex> cube_vertices = {
@@ -55,7 +56,7 @@ volume::volume()
         20, 21, 22, 22, 23, 20  // Bottom
     };
 
-	geometry = std::unique_ptr<triangle_geometry>(new triangle_geometry(cube_vertices, cube_indices));
+	triangles = std::unique_ptr<triangle_geometry>(new triangle_geometry(cube_vertices, cube_indices));
 
 	//------ encapsulate ------
 
@@ -76,8 +77,8 @@ void volume::generate_imgui_editor()
 
 void volume::draw(glm::mat4 parent_world, Camera& camera)
 {
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  
+    //glEnable(GL_BLEND);
+    //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  
 
 	volume_shader->bind();
 
@@ -96,5 +97,5 @@ void volume::draw(glm::mat4 parent_world, Camera& camera)
 
 	volume_shader->set_imgui_uniforms();
 
-	geometry->draw();
+	triangles->draw();
 }

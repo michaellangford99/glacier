@@ -34,6 +34,10 @@ public:
 	
 	glm::mat4 world;
 
+	//temp, indicate which draw system we should use
+	bool premultiplied_alpha = false;
+	bool depth_draw = true;
+
 	element();
 	virtual void generate_imgui_editor();
 	virtual void update();

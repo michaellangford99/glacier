@@ -89,6 +89,6 @@ void main()
 	
 
 	FragColor = vec4(terrain_color + line_color*line_intensity, 1.0);
-	if (height > h_slice)
-		FragColor *= 1+(height-h_slice)/200;
+	if (height > h_slice+5000)
+		FragColor *= 1+(height-(h_slice+5000))/200;
 }

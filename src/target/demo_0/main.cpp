@@ -36,6 +36,7 @@ public:
 	std::shared_ptr<element> root;
 
 	Shader* fullscreen_shader;
+	Shader* atmosphere_shader;
 	Shader* grass_shader;
 	Shader* test_shader;
 	std::shared_ptr<Shader> arb_function_shader;
@@ -68,6 +69,22 @@ public:
 
 		if (ImGui::CollapsingHeader("Shaders"))
 		{
+			//TODO: get all shaders on here
+			
+			if (ImGui::TreeNode("test parameter set"))
+			{
+				//test_parameter_set->generate_imgui_editor();
+				ImGui::TreePop();
+				ImGui::Spacing();
+			}
+
+			if (ImGui::TreeNode("atmosphere_shader"))
+			{
+				atmosphere_shader->generate_imgui_editor();
+				ImGui::TreePop();
+				ImGui::Spacing();
+			}
+
 			if (ImGui::TreeNode("fullscreen_shader"))
 			{
 				fullscreen_shader->generate_imgui_editor();
@@ -119,6 +136,7 @@ public:
 		g->set_active_camera(&camera);
 
 		//setup shaders
+		atmosphere_shader = new Shader("glacier/vertex.glsl", "glacier/atmosphere_shader.glsl");
 		fullscreen_shader = new Shader("glacier/vertex.glsl", "glacier/test_fullscreen_shader.glsl");
 		test_shader = new Shader("glacier/vertex.glsl", "glacier/debug_fragment.glsl");
 		
@@ -179,9 +197,64 @@ public:
 		root->children.push_back(test_tile3);
 		root->children.push_back(test_tile4);
 
-		root->children.push_back(test_volume);
+		for (int i = 0; i < 10; i++)
+		{
+			std::shared_ptr<volume> test_volume = std::shared_ptr<volume>(new volume());
+			test_volume->position = glm::ballRand(30.0f);
+			test_volume->position.z = abs(test_volume->position.z)/10.0;
+			root->children.push_back(test_volume);
+		}
 
 		arb_function_shader = std::shared_ptr<Shader>(new Shader("glacier/vertex.glsl", "glacier/arb_function.glsl"));
+
+	struct draw_cmd {
+		glm::mat4 parent_world;
+		std::shared_ptr<element> e;
+	};
+
+	std::vector<draw_cmd> translucent_draw_buffer;
+
+	void draw_element_tree(std::shared_ptr<element>& e, glm::mat4 parent_world, Camera& camera)
+	{
+		e->update();
+		
+		if (e->premultiplied_alpha)
+			translucent_draw_buffer.push_back({parent_world, e});
+		else
+			e->draw(parent_world, camera);
+
+		for (auto& child : e->children)
+		{
+			draw_element_tree(child, parent_world*e->world, camera);
+		}
+	}
+
+	void draw_all(std::shared_ptr<element>& e, glm::mat4 parent_world, Camera& camera)
+	{
+		translucent_draw_buffer.clear();
+
+		//TODO: set opaque blend settings
+		draw_element_tree(e, parent_world, camera);
+
+		//set premultiplied alpha settings
+		glEnable(GL_BLEND);
+		glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
+		glBlendFuncSeparate(GL_ONE, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+		glDepthMask(false);//don't write to depth buffer
+		//but do enable to the depth test!
+		// no drawing behind stuff
+		// later we will need to add functionality for translucent objects to
+		// test against the depth buffer based on the illusory pixel depth, not the geomtry draw mask we use (like a cube for a circle)
+		glEnable(GL_DEPTH_TEST);
+		glEnable(GL_CULL_FACE);
+
+		for (auto& cmd : translucent_draw_buffer)
+		{
+			cmd.e->draw(cmd.parent_world, camera);
+		}
+
+		//restore? idk.
+		glDepthMask(true);
 	}
 
 	void run()
@@ -207,7 +280,19 @@ public:
 			camera.set_viewport(g->viewport_pos, g->viewport_size, g->window_size);
 			camera.update_view_projection();
 
-			bool draw_fullscreen_shader = true;
+			atmosphere_shader->bind();
+			atmosphere_shader->set_imgui_uniforms();
+			glm::mat4 identity = glm::mat4(1.0);
+			atmosphere_shader->set_uniform("model", identity);
+			atmosphere_shader->set_uniform("view", identity);
+			atmosphere_shader->set_uniform("projection", identity);
+			atmosphere_shader->set_uniform("inv_view_projection", camera.inverse_view_projection);
+			atmosphere_shader->set_uniform("camera_position", camera.position);
+			glDepthMask(false);
+			fullscreen_quad->draw();
+			glDepthMask(true);
+
+			bool draw_fullscreen_shader = false;
 			if (draw_fullscreen_shader)
 			{
 				//bind / apply shader?
@@ -215,7 +300,7 @@ public:
 
 				fullscreen_shader->set_imgui_uniforms();
 
-				glm::mat4 identity = glm::mat4(1.0);
+				identity = glm::mat4(1.0);
 
 				fullscreen_shader->set_uniform("model", identity);
 				fullscreen_shader->set_uniform("view", identity);
@@ -227,21 +312,7 @@ public:
 				glDepthMask(true);
 			}
 
-			bool draw_terrain = true;
-			if (draw_terrain)
-			{
-				test_tile->update();
-				test_tile->draw(glm::mat4(1.0), camera);
-
-				test_tile2->update();
-				test_tile2->draw(glm::mat4(1.0), camera);
-
-				test_tile3->update();
-				test_tile3->draw(glm::mat4(1.0), camera);
-
-				test_tile4->update();
-				test_tile4->draw(glm::mat4(1.0), camera);
-			}
+			draw_all(root, glm::mat4(1.0), camera);
 
 			bool draw_grass_tiles = false;
 			if (draw_grass_tiles)
@@ -301,27 +372,27 @@ public:
 				//}
 			}
 
-			test_volume->update();
-			test_volume->draw(glm::mat4(1.0f), camera);
+			//test_volume->update();
+			//test_volume->draw(glm::mat4(1.0f), camera);
 
-			bool draw_arb_func_shader = false;
-			if (draw_arb_func_shader)
-			{
-				glm::mat4& view = camera.view;
-				glm::mat4& projection = camera.projection;
-
-				arb_function_shader->bind();
-				arb_function_shader->set_uniform("model", glm::mat4(1.0));
-				arb_function_shader->set_uniform("view", glm::mat4(1.0));
-				arb_function_shader->set_uniform("projection", glm::mat4(1.0));
-				arb_function_shader->set_uniform("iTime", t);
-				arb_function_shader->set_uniform("inv_view_projection", camera.inverse_view_projection);
-				arb_function_shader->set_uniform("camera_position", camera.position);
-
-				arb_function_shader->set_imgui_uniforms();
-
-				fullscreen_quad->draw();
-			}
+			//bool draw_arb_func_shader = false;
+			//if (draw_arb_func_shader)
+			//{
+			//	glm::mat4& view = camera.view;
+			//	glm::mat4& projection = camera.projection;
+//
+			//	arb_function_shader->bind();
+			//	arb_function_shader->set_uniform("model", glm::mat4(1.0));
+			//	arb_function_shader->set_uniform("view", glm::mat4(1.0));
+			//	arb_function_shader->set_uniform("projection", glm::mat4(1.0));
+			//	arb_function_shader->set_uniform("iTime", t);
+			//	arb_function_shader->set_uniform("inv_view_projection", camera.inverse_view_projection);
+			//	arb_function_shader->set_uniform("camera_position", camera.position);
+//
+			//	arb_function_shader->set_imgui_uniforms();
+//
+			//	fullscreen_quad->draw();
+			//}
 
 			debug_draw::get_instance()->draw_queue(camera);
 			debug_draw::get_instance()->clear_queue();
