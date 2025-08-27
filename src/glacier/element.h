@@ -36,7 +36,7 @@ public:
 
 	//temp, indicate which draw system we should use
 	bool premultiplied_alpha = false;
-	bool depth_draw = true;
+	bool needs_depth_map = false;
 
 	element();
 	virtual void generate_imgui_editor();

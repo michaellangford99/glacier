@@ -53,6 +53,8 @@ public:
 	std::shared_ptr<terrain_tile> test_tile3;
 	std::shared_ptr<terrain_tile> test_tile4;
 
+	std::shared_ptr<texture> beam_tex;
+
 	float t = 0.0f;
 
 	void generate_imgui_windows()
@@ -177,8 +179,6 @@ public:
 
 		fullscreen_quad = new triangle_geometry(plane_vertices, plane_indices);
 
-		test_volume = std::shared_ptr<volume>(new volume());
-
 		std::vector<vertex> tree;
 		add_limbs(tree, {0,0,0}, {0, 0, 1}, 1.0f, 10);
 
@@ -204,6 +204,14 @@ public:
 			test_volume->position.z = abs(test_volume->position.z)/10.0;
 			root->children.push_back(test_volume);
 		}
+
+		beam_tex = std::make_shared<texture>("beam_pattern.jpg");
+
+		std::shared_ptr<volume> test_volume = std::shared_ptr<volume>(new volume("glacier/vertex.glsl", "glacier/volume_beam.glsl"));
+		test_volume->position = glm::ballRand(30.0f);
+		test_volume->position.z = abs(test_volume->position.z)/10.0;
+		test_volume->volume_shader->set_uniform("beam_map", beam_tex.get());
+		root->children.push_back(test_volume);
 
 		arb_function_shader = std::shared_ptr<Shader>(new Shader("glacier/vertex.glsl", "glacier/arb_function.glsl"));
 
@@ -233,7 +241,13 @@ public:
 	{
 		translucent_draw_buffer.clear();
 
-		//TODO: set opaque blend settings
+		glEnable(GL_DEPTH_TEST);
+		glEnable(GL_CULL_FACE);
+		glEnable(GL_BLEND);
+		glDepthMask(true);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		
 		draw_element_tree(e, parent_world, camera);
 
 		//set premultiplied alpha settings

@@ -1,7 +1,8 @@
 #include "volume.h"
 #include <random>
 
-volume::volume()
+volume::volume(std::string vertex_shader,
+		       std::string fragment_shader)
 {
     premultiplied_alpha = true;
 	//geometry = std::unique_ptr<terrain_geometry>(new terrain_geometry(terrain_file, decimation));
@@ -62,7 +63,7 @@ volume::volume()
 
 	//---- set up volume shader ----
     
-	volume_shader = std::unique_ptr<Shader>(new Shader("glacier/vertex.glsl", "glacier/volume.glsl"));
+	volume_shader = std::unique_ptr<Shader>(new Shader(vertex_shader, fragment_shader));
 	//volume_shader->set_uniform("terrain_intensity", 1.6f);
 	//volume_shader->set_uniform("terrain_color", glm::vec3(0.2,0.2,0.2));
 	//volume_shader->set_uniform("normal_map", normal_map.get());

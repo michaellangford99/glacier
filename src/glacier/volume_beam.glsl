@@ -13,10 +13,14 @@ uniform mat4 projection;
 uniform mat4 inv_view_projection;
 uniform vec3 camera_position;
 
-float m = 0.467;
-float n = 7.5;
+float m = -75.0;
+uniform float n;
 
-//uniform vec3 volume_color;
+uniform sampler2D beam_map;
+
+#define PI 3.141592
+
+uniform vec3 volume_color;
 
 void main() {
     vec4 unproj_pos = inv_view_projection * vec4(Position);
@@ -48,15 +52,46 @@ void main() {
     vec3 p0 = camera_position+ray*t0;
     vec3 p1 = camera_position+ray*t1;
 
-    float dist = length(p0-p1);
+    //soo we have our initial integration points
+    //255 means goes to the radius
+    float dist = 0;
+
+    int steps = 200;
+    float dx = length(p0-p1)/steps;
+
+    vec3 p = p1;
+
+    for (int i = 0; i < steps; i++)
+    {
+        vec3 xyz = p-sphere_pos;
+        float rho = length(xyz);
+        float theta = atan(xyz.y, xyz.x);
+        float phi = acos(xyz.z/rho);
+        vec2 theta_phi_sampler_coords = vec2((theta+PI/2.0)/PI, phi/PI);
+
+        float beam_intensity = texture(beam_map, theta_phi_sampler_coords).x;
+
+        //beam_intensity *= 1-rho;
+
+        if (xyz.x > 0)
+        {
+            if (rho < beam_intensity)
+                dist += dx*beam_intensity;///(rho*rho);
+        }
+        p += dx*ray;
+    }
+
+//    float dist = length(p0-p1);
 
     //float atten = 
 
-    vec3 volume_color = normalize(world_pos);
+   // vec3 volume_color = vec3(1,0,0);//normalize(world_pos);
 
-    float alpha = dist*exp(m*dist)/n;
+    float alpha = 1.0 - exp(m*dist);
 
     FragColor = vec4(volume_color*alpha, alpha);
+
+    //FragColor += vec4(texture(beam_map, TexCoord).xyz, 0);
 
     //FragColor = vec4(WorldPosition.xyz/WorldPosition.w - world_pos, 1);
 

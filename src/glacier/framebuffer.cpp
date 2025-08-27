@@ -28,7 +28,7 @@ framebuffer::framebuffer(unsigned int width, unsigned int height, std::shared_pt
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     std::cout << __FILE__ << ":" << __LINE__ << " error status: " << glGetError() << std::endl;
-    
+
 }
 
 //todo: resize functions

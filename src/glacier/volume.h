@@ -34,7 +34,8 @@ class volume : public mesh
 {
 public:
     std::shared_ptr<Shader> volume_shader;
-	volume();
+	volume(std::string vertex_shader="glacier/vertex.glsl", 
+		   std::string fragment_shader="glacier/volume.glsl");
 	void generate_imgui_editor();
 	void draw(glm::mat4 parent_world, Camera& camera);
 };

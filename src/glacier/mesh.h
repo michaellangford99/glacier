@@ -18,6 +18,7 @@
 #include <iostream>
 
 #include "shader.h"
+#include "line.h"
 #include "triangles.h"
 #include "element.h"
 #include "camera.h"
@@ -32,12 +33,32 @@
 class mesh : public element
 {
 public:
-	std::unique_ptr<triangle_geometry> geometry;
-	std::unique_ptr<Shader> shader;
+	std::shared_ptr<triangle_geometry> triangles;
+	std::shared_ptr<line_geometry> lines;
+	std::shared_ptr<Shader> shader;
 
 	mesh() {};
-	void generate_imgui_editor() { element::generate_imgui_editor(); };
-	void draw(glm::mat4 parent_world, Camera& camera) { element::draw(parent_world, camera); };
+
+	mesh(std::shared_ptr<triangle_geometry> triangles,
+		 std::shared_ptr<line_geometry> lines,
+		 std::shared_ptr<Shader> shader) : triangles(triangles), lines(lines), shader(shader) {};
+
+	void generate_imgui_editor() { element::generate_imgui_editor(); if (shader) shader->generate_imgui_editor(); };
+	void draw(glm::mat4 parent_world, Camera& camera) 
+	{
+		element::draw(parent_world, camera);
+
+		shader->bind();
+
+		shader->set_uniform("model", parent_world*world);
+		shader->set_uniform("view", camera.view);
+		shader->set_uniform("projection", camera.projection);
+
+		shader->set_imgui_uniforms();
+
+		lines->draw();
+		triangles->draw();
+	};
 };
 
 #endif

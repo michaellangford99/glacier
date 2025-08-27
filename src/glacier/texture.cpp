@@ -45,6 +45,11 @@ texture::texture(std::string path)
 	//based on the way this loads data, will assume that only data type is GL_UNSIGNED_BYTE
 	unsigned char *data = stbi_load(path.c_str(), &width, &height, &channels, 0);
 
+	std::cout << width << std::endl;
+	std::cout << height << std::endl;
+
+	std::cout << "------------------------------------------------------------" << std::endl;
+
 	if (data)
 	{
 		switch (channels)
