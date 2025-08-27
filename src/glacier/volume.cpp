@@ -73,6 +73,7 @@ volume::volume(std::string vertex_shader,
 void volume::generate_imgui_editor()
 {
 	element::generate_imgui_editor();
+    ImGui::SliderFloat("radius", &radius, 0.0, 100.0f);
 	volume_shader->generate_imgui_editor();
 }
 
@@ -90,11 +91,12 @@ void volume::draw(glm::mat4 parent_world, Camera& camera)
 	//set auto-edited uniforms.
 	//afterwards reset those that are supposed to be set internally
 
-	volume_shader->set_uniform("model", parent_world * world);
+	volume_shader->set_uniform("model", parent_world * world*glm::scale(glm::mat4(1.0), glm::vec3(radius*2, radius*2, radius*2)));
 	volume_shader->set_uniform("view", view);
 	volume_shader->set_uniform("projection", projection);
 	volume_shader->set_uniform("inv_view_projection", glm::inverse(projection * view));
 	volume_shader->set_uniform("camera_position", camera.position);
+    volume_shader->set_uniform("radius", radius);
 
 	volume_shader->set_imgui_uniforms();
 

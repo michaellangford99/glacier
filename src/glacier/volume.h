@@ -38,6 +38,8 @@ public:
 		   std::string fragment_shader="glacier/volume.glsl");
 	void generate_imgui_editor();
 	void draw(glm::mat4 parent_world, Camera& camera);
+
+	float radius = 1;
 };
 
 #endif

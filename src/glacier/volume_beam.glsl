@@ -16,6 +16,7 @@ uniform vec3 camera_position;
 float m = -75.0;
 uniform float n;
 
+uniform float radius;
 uniform sampler2D beam_map;
 
 #define PI 3.141592
@@ -29,7 +30,7 @@ void main() {
 
 	vec3 ray = normalize(world_pos - camera_position);
 
-    float radius = 0.5;
+    //float radius = 0.5;
 
     vec3 sphere_pos = (model * vec4(0,0,0,1)).xyz;
 
@@ -42,9 +43,6 @@ void main() {
     float c = pow(length(O-C),2) - pow(radius,2);
 
     float delta = b*b - 4*a*c;
-
-    //if (delta < 0) discard;
-    //else FragColor = vec4(1, 1, 1, 1);
 
     float t0 = (-b+sqrt(delta))/(2*a);
     float t1 = (-b-sqrt(delta))/(2*a);
@@ -71,31 +69,14 @@ void main() {
 
         float beam_intensity = texture(beam_map, theta_phi_sampler_coords).x;
 
-        //beam_intensity *= 1-rho;
-
         if (xyz.x > 0)
         {
-            if (rho < beam_intensity)
-                dist += dx*beam_intensity;///(rho*rho);
+            if (rho < beam_intensity*radius)
+                dist += dx*beam_intensity;
         }
         p += dx*ray;
     }
 
-//    float dist = length(p0-p1);
-
-    //float atten = 
-
-   // vec3 volume_color = vec3(1,0,0);//normalize(world_pos);
-
-    float alpha = 1.0 - exp(m*dist);
-
+    float alpha = 1.0 - exp(m*dist/radius);
     FragColor = vec4(volume_color*alpha, alpha);
-
-    //FragColor += vec4(texture(beam_map, TexCoord).xyz, 0);
-
-    //FragColor = vec4(WorldPosition.xyz/WorldPosition.w - world_pos, 1);
-
-    //FragColor = vec4(world_pos.xy, 0, 1);
-
-    //FragColor = vec4(1, 1, 1, 1);
 }
