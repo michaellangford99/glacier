@@ -3,6 +3,9 @@
 CXX_FLAGS := -ggdb#-Wall -Wextra -std=c++20 
 PRE_FLAGS := -std=c++2a -MMD -MP
 
+#proto compiler
+PROTOC := protoc
+
 # Project directory structure
 BIN := bin
 SRC := src
@@ -13,7 +16,7 @@ BUILD := build
 
 # Library search directories and flags
 EXT_LIB :=
-LDFLAGS := -pthread -ldl -lglfw -lfreetype
+LDFLAGS := -pthread -ldl -lglfw -lfreetype -lprotobuf
 LDPATHS := $(addprefix -L,$(LIB) $(EXT_LIB))
 
 # Include directories
@@ -35,8 +38,14 @@ GLACIER_LIB_SRCS := $(GLACIER_SRCS) $(IMGUI_SRCS)
 GLACIER_LIB_OBJS := $(subst $(SRC)/,$(BUILD)/,$(addsuffix .o,$(basename $(GLACIER_LIB_SRCS))))
 GLACIER_LIB_TARGET := $(BIN)/glacier_lib.a
 
-DEMO_0_SRC_DIR := $(SRC)/target/demo_0
-DEMO_0_SRCS := $(wildcard $(DEMO_0_SRC_DIR)/*.cpp $(DEMO_0_SRC_DIR)/*.c)
+TARGET := msg_demo
+
+DEMO_0_SRC_DIR := $(SRC)/target/$(TARGET)
+
+DEMO_0_PROTO_SRCS := $(wildcard $(DEMO_0_SRC_DIR)/*.proto)
+DEMO_0_PROTO_CC := $(subst $(SRC)/,$(BUILD)/,$(addsuffix .cc,$(basename $(DEMO_0_PROTO_SRCS))))
+
+DEMO_0_SRCS := $(wildcard $(DEMO_0_SRC_DIR)/*.cpp $(DEMO_0_SRC_DIR)/*.c) $(DEMO_0_PROTO_CC)
 DEMO_0_OBJS := $(subst $(SRC)/,$(BUILD)/,$(addsuffix .o,$(basename $(DEMO_0_SRCS))))
 DEMO_0_TARGET := $(subst $(SRC)/,$(BIN)/, $(addsuffix .gl,$(DEMO_0_SRC_DIR)))
 
@@ -52,15 +61,15 @@ CONTENT_TARGETS := $(subst $(CONTENT)/,$(BIN)/,$(wildcard content/*))
 build: all
 
 # Main task
-all: demo_0#here add the demo targets, and *they* will depend on glacier_lib
+all: target#here add the demo targets, and *they* will depend on glacier_lib
 #	@echo $(SRCS)
 #	@echo $<
 
-demo_0: $(DEMO_0_TARGET)
+target: $(DEMO_0_TARGET)
 
 glacier_lib: $(GLACIER_LIB_TARGET) $(GLSL) $(FONT) $(CONTENT_TARGETS)
 
-$(DEMO_0_TARGET): $(DEMO_0_OBJS) glacier_lib 
+$(DEMO_0_TARGET): $(DEMO_0_PROTO_CC) $(DEMO_0_OBJS) glacier_lib 
 	@echo "🚧 Building..."
 	@mkdir -p $(dir $@)
 	$(CXX) $(DEMO_0_OBJS) $(GLACIER_LIB_TARGET) -o $@ $(LDPATHS) $(LDFLAGS)
@@ -81,6 +90,11 @@ $(BUILD)/%.o: $(SRC)/%.c*
 	@mkdir -p $(dir $@)
 	$(CXX) $(CXX_FLAGS) $(PRE_FLAGS) $(INC_FLAGS) -c -o $@ $< $(LDPATHS) $(LDFLAGS)
 
+# target proto files: TODO: should this just do all protos?
+$(DEMO_0_PROTO_CC): $(DEMO_0_PROTO_SRCS)
+	@mkdir -p $(dir $@)
+	$(PROTOC) --cpp_out=$(dir $@) $<
+
 # Copy all glsl files to bin/
 $(BIN)/%.glsl: $(SRC)/%.glsl
 	@mkdir -p $(dir $@)
@@ -94,7 +108,7 @@ $(BIN)/%.ttf: $(SRC)/%.ttf
 # Copy everything in content/ to bin/
 $(BIN)/%: $(CONTENT)/%
 	@mkdir -p $(dir $@)
-	cp $< $@
+	cp -r $< $@
 
 # Clean task
 .PHONY: clean

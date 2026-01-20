@@ -256,3 +256,18 @@ for engineering
 - plotting
 - python tie-ins
   - numpy?
+
+Again, for engineering:
+- compass would be nice
+- need to be able to insert from python
+  - any object type
+  - images
+  - arbitrary datasets
+  - vectors
+  - geometry
+- viewers
+- beam viewer
+  - dB
+  - realistic illumination
+  - reference real beam pattern
+  - use depth render

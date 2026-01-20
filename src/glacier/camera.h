@@ -21,6 +21,16 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+struct camera_data
+{
+	glm::vec3 position;
+	glm::vec3 look_at = glm::vec3(0, 0, 0);
+
+	glm::mat4 view;
+	glm::mat4 projection;
+	glm::mat4 inverse_view_projection;
+};
+
 class Camera
 {
 private:
@@ -65,6 +75,17 @@ public:
 	void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 
 	void set_viewport(glm::vec2 _viewport_pos, glm::vec2 _viewport_size, glm::vec2 _window_size);
+
+	/*camera_data get_struct()
+	{
+		return {
+			position,
+			look_at,
+			view,
+			projection,
+			inverse_view_projection
+		};
+	}*/
 };
 
 #endif

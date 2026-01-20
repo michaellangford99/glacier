@@ -176,13 +176,14 @@ terrain_tile::terrain_tile(std::string terrain_file, int decimation, glm::vec3 l
     
 	terrain_shader = std::unique_ptr<Shader>(new Shader("glacier/vertex.glsl", "glacier/terrain.glsl"));
 	terrain_shader->set_uniform("terrain_intensity", 1.6f);
-	terrain_shader->set_uniform("terrain_color", glm::vec3(0.2,0.2,0.2));
+	terrain_shader->set_uniform("terrain_color", glm::vec3(0.4,0.4,0.4));
 	terrain_shader->set_uniform("normal_map", normal_map.get());
 	terrain_shader->set_uniform("height_map", height_map.get());
 	terrain_shader->set_uniform("light_dir", glm::vec3(1.0, 0.3, 1.0));
+	terrain_shader->set_uniform("uSunPos", glm::vec3(1.0, 1.0, 0.3));
 
 	//reference to origin
-	lat_long_elev -= origin_lla;
+	lat_long_elev -= origin_lla; 
 
 	position = glm::vec3(lat_long_elev.y*TERRAIN_METERS_PER_DEGREE / TERRAIN_METERS_PER_UNIT,
 						 lat_long_elev.x*TERRAIN_METERS_PER_DEGREE / TERRAIN_METERS_PER_UNIT,

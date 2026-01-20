@@ -7,3 +7,6 @@
 [submodule "include/SimpleJSON"]
 	path = include/SimpleJSON
 	url = git@github.com:nbsdx/SimpleJSON.git
+[submodule "include/cppzmq"]
+	path = include/cppzmq
+	url = https://github.com/zeromq/cppzmq.git

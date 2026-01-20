@@ -21,11 +21,43 @@
 #include "volume.h"
 #include "debug_draw.h"
 
+#include "parameter.h"
+//#include "parameter_set.h"
+
+#include "l_system.h"
+
 #include "glacier.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+
+/*typedef struct 
+{
+	glm::vec3 pos;
+	float height;
+} blade;
+
+class grass : element
+{
+	std::vector<blade> blades;
+	std::unique_ptr<triangle_geometry> blade_geometry;
+
+	grass() : element()
+	{
+
+	}
+
+	void generate_imgui_editor()
+	{
+		
+	}
+
+	void draw(glm::mat4 parent_world, Camera& camera) override
+	{
+
+	}
+};*/
 
 class demo//TODO: should this inherit glacier?
 {
@@ -39,21 +71,27 @@ public:
 	Shader* atmosphere_shader;
 	Shader* grass_shader;
 	Shader* test_shader;
+
+	Shader* cycle_shader;
+	framebuffer* cycle_fb_0;
+	std::shared_ptr<texture> cycle_tex_0;
+	std::shared_ptr<texture> test_tex;
+	framebuffer* cycle_fb_1;
+	std::shared_ptr<texture> cycle_tex_1;
+
 	std::shared_ptr<Shader> arb_function_shader;
 	triangle_geometry* fullscreen_quad;
-	line_geometry* quad_lines;
-
-	std::shared_ptr<volume> test_volume;
+	line_geometry* tree_lines;
+	triangle_geometry* tree_triangles;
 
 	std::shared_ptr<texture> grass_texture;
 	std::shared_ptr<texture> mask_texture;
 
-	std::shared_ptr<terrain_tile> test_tile;
-	std::shared_ptr<terrain_tile> test_tile2;
-	std::shared_ptr<terrain_tile> test_tile3;
-	std::shared_ptr<terrain_tile> test_tile4;
+	std::shared_ptr<l_system> lsys;
 
 	std::shared_ptr<texture> beam_tex;
+
+	//std::shared_ptr<parameter_set> test_parameter_set;
 
 	float t = 0.0f;
 
@@ -101,6 +139,14 @@ public:
 				ImGui::Spacing();
 			}
 
+			if (ImGui::TreeNode("test_shader"))
+			{
+				test_shader->generate_imgui_editor();
+				ImGui::TreePop();
+				ImGui::Spacing();
+				cycle_shader->generate_imgui_editor();
+			}
+
 			ImGui::Separator();
 			g->generate_tree_imgui_editor(root);
 		}
@@ -112,7 +158,7 @@ public:
 	void add_limbs(std::vector<vertex>& vertices, glm::vec3 pos, glm::vec3 dir, float length, int depth)
 	{
 		vertex v = {{pos},
-					{0, 0, 0},
+					glm::normalize(glm::cross(dir, glm::normalize(glm::cross({0,0,1}, dir)))),
 					{0, 0},
 					{1, 1, 1}};
 		vertices.push_back(v);
@@ -140,7 +186,15 @@ public:
 		//setup shaders
 		atmosphere_shader = new Shader("glacier/vertex.glsl", "glacier/atmosphere_shader.glsl");
 		fullscreen_shader = new Shader("glacier/vertex.glsl", "glacier/test_fullscreen_shader.glsl");
-		test_shader = new Shader("glacier/vertex.glsl", "glacier/debug_fragment.glsl");
+		test_shader = new Shader("glacier/wind_vertex.glsl", "glacier/debug_fragment.glsl");
+
+		cycle_shader = new Shader("glacier/vertex.glsl", "glacier/cycle_shader.glsl");
+		cycle_tex_0 = std::make_shared<texture>(nullptr, 2048, 2048, 1, 2, GL_RED, GL_R32F, GL_FLOAT);
+		cycle_fb_0 = new framebuffer(2048, 2048, cycle_tex_0);
+		cycle_tex_1 = std::make_shared<texture>(nullptr, 2048, 2048, 1, 2, GL_RED, GL_R32F, GL_FLOAT);
+		cycle_fb_1 = new framebuffer(2048, 2048, cycle_tex_1);
+
+		test_tex = std::make_shared<texture>("noise_perlin.png");
 		
 		//TODO fix capital/non capital letter scheme
 		grass_shader = new Shader("glacier/vertex.glsl", "glacier/grass.glsl");
@@ -182,20 +236,32 @@ public:
 		std::vector<vertex> tree;
 		add_limbs(tree, {0,0,0}, {0, 0, 1}, 1.0f, 10);
 
-		quad_lines = new line_geometry(tree);
+		tree_lines = new line_geometry(tree);
 
-		glm::vec3 origin_lla = glm::vec3(32, -111, 2389.0f/3.0);
+		std::vector<unsigned int> indices;
+		int i = 0;
+		for (auto&v:tree) { indices.push_back(i); i++; }
+		tree_triangles = new triangle_geometry(tree, indices);
 
-		test_tile  = std::make_shared<terrain_tile>("N31W111.hgt", 4, glm::vec3(31.0f,-111.0f, 0.0), origin_lla);
-		test_tile2 = std::make_shared<terrain_tile>("N31W112.hgt", 4, glm::vec3(31.0f,-112.0f, 0.0), origin_lla);
-		test_tile3 = std::make_shared<terrain_tile>("N32W111.hgt", 4, glm::vec3(32.0f,-111.0f, 0.0), origin_lla);
-		test_tile4 = std::make_shared<terrain_tile>("N32W112.hgt", 4, glm::vec3(32.0f,-112.0f, 0.0), origin_lla);
+		glm::vec3 origin_lla = glm::vec3(36, -112, 2389.0f/3.0);
+
 
 		root = std::make_shared<element>();
-		root->children.push_back(test_tile);
-		root->children.push_back(test_tile2);
-		root->children.push_back(test_tile3);
-		root->children.push_back(test_tile4);
+
+		std::vector<std::pair<std::string, glm::vec3>> tiles;
+		//utah: tiles.push_back({"N37W113.hgt", glm::vec3(37.0f,-110.0f, 0.0)});
+		tiles.push_back({"N35W112.SRTMGL1.hgt/N35W112.hgt", glm::vec3(35.0f,-112.0f, 0.0)});
+		tiles.push_back({"N35W113.SRTMGL1.hgt/N35W113.hgt", glm::vec3(35.0f,-113.0f, 0.0)});
+		tiles.push_back({"N35W114.SRTMGL1.hgt/N35W114.hgt", glm::vec3(35.0f,-114.0f, 0.0)});
+		tiles.push_back({"N36W112.SRTMGL1.hgt/N36W112.hgt", glm::vec3(36.0f,-112.0f, 0.0)});
+		tiles.push_back({"N36W113.SRTMGL1.hgt/N36W113.hgt", glm::vec3(36.0f,-113.0f, 0.0)});
+		tiles.push_back({"N36W114.SRTMGL1.hgt/N36W114.hgt", glm::vec3(36.0f,-114.0f, 0.0)});
+
+		for (auto& tile : tiles)
+		{
+			std::shared_ptr<terrain_tile> t = std::make_shared<terrain_tile>(tile.first, 4, tile.second, origin_lla);
+			root->children.push_back(t);
+		}
 
 		for (int i = 0; i < 10; i++)
 		{
@@ -215,19 +281,38 @@ public:
 
 		arb_function_shader = std::shared_ptr<Shader>(new Shader("glacier/vertex.glsl", "glacier/arb_function.glsl"));
 
+		//test_parameter_set = std::shared_ptr<parameter_set>(new parameter_set());
+		//test_parameter_set->set("test_dir", glm::vec3(1,0,0));
+		//test_parameter_set->parameters["test2"] = std::unique_ptr<different_vec3_editor>(new different_vec3_editor());
+		//test_parameter_set->set("test2", glm::vec3(1,0,0));
+
+		lsys = std::make_shared<l_system>();
+		root->children.push_back(lsys);
+	}
+
 	struct draw_cmd {
 		glm::mat4 parent_world;
 		std::shared_ptr<element> e;
 	};
 
 	std::vector<draw_cmd> translucent_draw_buffer;
+	std::vector<draw_cmd> depth_draw_buffer;
 
 	void draw_element_tree(std::shared_ptr<element>& e, glm::mat4 parent_world, Camera& camera)
 	{
 		e->update();
 		
-		if (e->premultiplied_alpha)
-			translucent_draw_buffer.push_back({parent_world, e});
+		if (e->premultiplied_alpha || e->needs_depth_map)
+		{
+			if (e->premultiplied_alpha)
+				translucent_draw_buffer.push_back({parent_world, e});
+
+			if (e->needs_depth_map)
+			{
+				//add to list of items that want to be drawn in a depth map
+
+			}
+		}			
 		else
 			e->draw(parent_world, camera);
 
@@ -271,6 +356,8 @@ public:
 		glDepthMask(true);
 	}
 
+	int flip = 0;
+
 	void run()
 	{
 		std::cout << "Did I stutter" << std::endl;
@@ -305,6 +392,60 @@ public:
 			glDepthMask(false);
 			fullscreen_quad->draw();
 			glDepthMask(true);
+
+			/*if (flip == 0)
+			{
+			cycle_fb_0->bind_and_predraw();
+				std::cout<< glCheckFramebufferStatus(GL_FRAMEBUFFER) << std::endl;
+				std::cout<< glGetError() << std::endl;
+
+				cycle_shader->bind();
+			 identity = glm::mat4(1.0);
+				cycle_shader->set_uniform("model", identity);
+				cycle_shader->set_uniform("view", identity);
+				cycle_shader->set_uniform("projection", identity);
+				cycle_shader->set_uniform("inv_view_projection", camera.inverse_view_projection);
+				cycle_shader->set_uniform("camera_position", camera.position);
+				cycle_shader->set_uniform("input_map", cycle_tex_1.get());
+				cycle_shader->set_uniform("test_map", test_tex.get());
+				cycle_shader->set_imgui_uniforms();
+				glDisable(GL_DEPTH_TEST);
+				fullscreen_quad->draw();
+				glEnable(GL_DEPTH_TEST);
+
+				std::cout<< glCheckFramebufferStatus(GL_FRAMEBUFFER) << std::endl;
+				std::cout<< glGetError() << std::endl;
+			cycle_fb_0->unbind();
+			cycle_tex_0->generate_mipmaps();
+			flip = 1;
+			}
+			else{
+				
+				cycle_fb_1->bind_and_predraw();
+
+				std::cout<< glCheckFramebufferStatus(GL_FRAMEBUFFER) << std::endl;
+				std::cout<< glGetError() << std::endl;
+
+				cycle_shader->bind();
+				identity = glm::mat4(1.0);
+				cycle_shader->set_uniform("model", identity);
+				cycle_shader->set_uniform("view", identity);
+				cycle_shader->set_uniform("projection", identity);
+				cycle_shader->set_uniform("inv_view_projection", camera.inverse_view_projection);
+				cycle_shader->set_uniform("camera_position", camera.position);
+				cycle_shader->set_uniform("input_map", cycle_tex_0.get());
+				cycle_shader->set_imgui_uniforms();
+				glDisable(GL_DEPTH_TEST);
+				fullscreen_quad->draw();
+				glEnable(GL_DEPTH_TEST);
+
+				std::cout<< glCheckFramebufferStatus(GL_FRAMEBUFFER) << std::endl;
+				std::cout<< glGetError() << "." <<std::endl;
+			cycle_fb_1->unbind();
+			cycle_tex_1->generate_mipmaps();
+			flip = 0;
+			}*/
+
 
 			bool draw_fullscreen_shader = false;
 			if (draw_fullscreen_shader)
@@ -378,11 +519,15 @@ public:
 					test_shader->set_uniform("model", world);
 					test_shader->set_uniform("view", view);
 					test_shader->set_uniform("projection", projection);
-					test_shader->set_uniform("debug_color", glm::vec3(1,1,1));
+					//test_shader->set_uniform("debug_color", glm::vec4(1,1,1, 1));
 
 					test_shader->set_imgui_uniforms();
 
-					quad_lines->draw();
+					
+					glDisable(GL_DEPTH_TEST);
+					tree_lines->draw();
+					glEnable(GL_DEPTH_TEST);
+					tree_triangles->draw();
 				//}
 			}
 

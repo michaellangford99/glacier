@@ -4,7 +4,7 @@
         "name": "(gdb) Launch",
         "type": "cppdbg",
         "request": "launch",
-        "program": "${workspaceFolder}/bin/glacier",
+        "program": "${workspaceFolder}/bin/target/demo_0.gl",
         "args": [],
         "stopAtEntry": false,
         "cwd": "${workspaceFolder}/bin/",

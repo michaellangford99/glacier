@@ -7,7 +7,9 @@ in vec3 Normal;
 in vec2 TexCoord;
 in vec3 Color;
 
-uniform vec3 debug_color;
+uniform vec4 debug_color;
+
+uniform vec3 sun_dir;
 
 //uniform sampler2D normal_map;
 
@@ -20,5 +22,7 @@ uniform vec3 debug_color;
 
 void main()
 {
-	FragColor = vec4(debug_color, 1.0);
+	float light = dot(normalize(sun_dir), normalize(Normal));
+
+	FragColor = vec4(light*debug_color.xyz, debug_color.w);
 }

@@ -1,0 +1,32 @@
+
+class ssbo
+{
+public:
+    ssbo(unsigned int size, unsigned int binding) : size(size), binding(binding)
+    {
+        glGenBuffers(1, &ID);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, ID);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, size, nullptr);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, binding, ID);
+    }
+
+    ~shader_storage_buffer()
+    {
+        glDeleteBuffers(1, &ID);
+    }
+
+    void bind() const
+    {
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, ID);
+    }
+
+    unsigned int get_id() const
+    {
+        return ID;
+    }
+
+private:
+    unsigned int ID;
+    unsigned int size;
+    unsigned int binding;
+};

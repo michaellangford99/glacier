@@ -40,6 +40,20 @@ void Shader::generate_imgui_editor()
 				if (uniform_list[i].uniform_type == GL_FLOAT_VEC3) ImGui::ColorEdit3(uniform_name.c_str(), glm::value_ptr(uniform_list[i].local_float3));
 				if (uniform_list[i].uniform_type == GL_FLOAT_VEC4) ImGui::ColorEdit4(uniform_name.c_str(), glm::value_ptr(uniform_list[i].local_float4));
 			}
+			//
+			/*
+			if uniform vec3 and ends with _dir
+			then load up the framebuffer
+			set a default camera view
+			render a debug line at the correct place
+			framebuffer::unbind()
+
+			then draw that texture we rendered to
+
+			how will we contain this information?
+			
+			
+			*/
 			else
 			{
 				switch (uniform_list[i].uniform_type)
