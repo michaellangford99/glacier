@@ -45,7 +45,7 @@ GLFWwindow* glacier::create_glfw_window(int width, int height)
 	GLFWwindow* window = glfwCreateWindow(width, height, "Glacier", NULL, NULL);
 	if (window == NULL)
 	{
-		std::cout << "Failed to create GLFW window" << std::endl;
+		spdlog::error("Failed to create GLFW window");
 		glfwTerminate();
 		return NULL;
 	}
@@ -53,7 +53,7 @@ GLFWwindow* glacier::create_glfw_window(int width, int height)
 
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 	{
-		std::cout << "Failed to initialize GLAD" << std::endl;
+		spdlog::error("Failed to initialize GLAD");
 		return NULL;
 	}
 
@@ -172,6 +172,8 @@ glacier::glacier() : glacier(800, 600)
 
 glacier::glacier(int width, int height)
 {
+	spdlog::set_level(spdlog::level::debug); // Set *global* log level to debug
+	
 	window_size = {width, height};
 
 	GLFWwindow* _window = create_glfw_window(window_size.x, window_size.y); //move this intp glacier constructor
@@ -192,7 +194,7 @@ glacier::glacier(int width, int height)
 
 glacier::~glacier()
 {
-	std::cout << "Shutting Down GLacier" << std::endl;
+	spdlog::info("Shutting Down GLacier");
 
 	// Deletes all ImGUI instances
 	ImGui_ImplOpenGL3_Shutdown();

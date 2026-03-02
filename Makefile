@@ -17,7 +17,7 @@ LDFLAGS := -pthread -ldl -lglfw -lfreetype
 LDPATHS := $(addprefix -L,$(LIB) $(EXT_LIB))
 
 # Include directories
-INC_DIRS := $(INC) $(SRC) $(wildcard $(SRC)/*/) $(INC)/glm /usr/include/freetype2
+INC_DIRS := $(INC) $(SRC) $(wildcard $(SRC)/*/) $(INC)/glm $(INC)/spdlog/include /usr/include/freetype2
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 
 # Construct build output and dependency filenames.

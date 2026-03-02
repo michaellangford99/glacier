@@ -13,6 +13,7 @@
 #include <memory>
 
 #include "texture.h"
+#include "debug.h"
 
 #include "imgui/imgui.h"
 #include "imgui/backends/imgui_impl_glfw.h"

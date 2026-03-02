@@ -9,7 +9,8 @@ framebuffer::framebuffer(unsigned int width, unsigned int height, std::shared_pt
     //TODO: arbitrary texture attachments
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, fb_texture->gl_texture_id, 0);
 
-	std::cout << __FILE__ << ":" << __LINE__ << " error status: " << glGetError() << std::endl;
+    log_gl_error_status();
+
     //create depth and stencil attachment
     unsigned int rbo;
     glGenRenderbuffers(1, &rbo);
@@ -17,17 +18,17 @@ framebuffer::framebuffer(unsigned int width, unsigned int height, std::shared_pt
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);  
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
-	std::cout << __FILE__ << ":" << __LINE__ << " error status: " << glGetError() << std::endl;
+    log_gl_error_status();
     
     //attach it
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
 
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) std::cout << "ERROR! couldn't create fb" << std::endl;
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) spdlog::error("couldn't create fb");
     
     //creation complete, unbind
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    std::cout << __FILE__ << ":" << __LINE__ << " error status: " << glGetError() << std::endl;
+    log_gl_error_status();
 
 }
 
@@ -40,7 +41,7 @@ void framebuffer::bind_and_predraw()
     
     glViewport(0,0,width,height);
 
-    std::cout << "w: " << width << " h: " << height << std::endl;
+    spdlog::info("w: {} h: {}", width, height);
     
     glClearColor(0, 1, 0, 1);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

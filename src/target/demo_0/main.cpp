@@ -214,6 +214,7 @@ public:
 		root->children.push_back(test_volume);
 
 		arb_function_shader = std::shared_ptr<Shader>(new Shader("glacier/vertex.glsl", "glacier/arb_function.glsl"));
+	}
 
 	struct draw_cmd {
 		glm::mat4 parent_world;
@@ -273,7 +274,6 @@ public:
 
 	void run()
 	{
-		std::cout << "Did I stutter" << std::endl;
 		//locals:
 		//...
 

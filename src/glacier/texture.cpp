@@ -13,6 +13,8 @@
 #include <sstream>
 #include <iostream>
 
+#include "debug.h"
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -45,10 +47,9 @@ texture::texture(std::string path)
 	//based on the way this loads data, will assume that only data type is GL_UNSIGNED_BYTE
 	unsigned char *data = stbi_load(path.c_str(), &width, &height, &channels, 0);
 
-	std::cout << width << std::endl;
-	std::cout << height << std::endl;
-
-	std::cout << "------------------------------------------------------------" << std::endl;
+	spdlog::debug("width: {}", width);
+	spdlog::debug("height: {}", height);
+	spdlog::debug("------------------------------------------------------------");
 
 	if (data)
 	{
@@ -71,7 +72,7 @@ texture::texture(std::string path)
 	}
 	else
 	{
-		std::cout << "Failed to load texture from file: " << path << std::endl;
+		spdlog::error("Failed to load texture from file: {}", path);
 		throw new std::invalid_argument("Failed to load texture from file.");
 	}
 	
@@ -111,12 +112,12 @@ texture::texture(void* data, int width, int height, int channels, int bytes_per_
 	set_default_wrap_filter();
 
 	glTexImage2D(GL_TEXTURE_2D, 0, gl_internal_format, width, height, 0, gl_format, gl_type, data);
-	std::cout << glGetError() << std::endl;
+	log_gl_error_status();
 	glGenerateMipmap(GL_TEXTURE_2D);
 		
 	if (data)
 	{
-		std::cout << "warning - loading null data as texture" << std::endl;
+		spdlog::warn("loading null data as texture");
 	}
 }
 
@@ -142,12 +143,12 @@ texture::texture(std::string path, int width, int height, int channels, int byte
 	if (valid)
 	{
 		glTexImage2D(GL_TEXTURE_2D, 0, gl_internal_format, width, height, 0, gl_format, gl_type, data.data());
-		std::cout << glGetError() << std::endl;
+		log_gl_error_status();
 		glGenerateMipmap(GL_TEXTURE_2D);
 	}
 	else
 	{
-		std::cout << "Failed to load texture from raw file: " << path << std::endl;
+		spdlog::error("Failed to load texture from raw file: {}", path);
 		throw new std::invalid_argument("Failed to load texture from raw file.");
 	}
 }
@@ -176,7 +177,7 @@ void update_rgb_texture(unsigned int texture, unsigned char* data, unsigned int 
 	}
 	else
 	{
-		std::cout << "Failed to load texture" << std::endl;
+		spdlog::error("Failed to load texture");
 	}
 
 	glBindTexture(GL_TEXTURE_2D, 0);

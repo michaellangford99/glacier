@@ -8,33 +8,19 @@
 #include <iostream>
 #include <iomanip>
 
+#include <spdlog/spdlog.h>
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/random.hpp>
 
-std::ostream& operator<<(std::ostream& out, glm::vec2 const& v)
-{
-    out << std::fixed << std::setprecision(2) << std::setfill('0');
-    out << "[" << v.x << ",\t"
-               << v.y << "]" << std::endl;
-}
+std::ostream& operator<<(std::ostream& out, glm::vec2 const& v);
+std::ostream& operator<<(std::ostream& out, glm::vec3 const& v);
+std::ostream& operator<<(std::ostream& out, glm::vec4 const& v);
 
-std::ostream& operator<<(std::ostream& out, glm::vec3 const& v)
-{
-    out << std::fixed << std::setprecision(2) << std::setfill('0');
-    out << "[" << v.x << ",\t"
-               << v.y << ",\t" 
-               << v.z << "]" << std::endl;
-}
+#define log_gl_error_status() (spdlog::info("{}: {} error status: {}", __FILE__, __LINE__, glGetError()))
 
-std::ostream& operator<<(std::ostream& out, glm::vec4 const& v)
-{
-    out << std::fixed << std::setprecision(2) << std::setfill('0');
-    out << "[" << v.x << ",\t"
-               << v.y << ",\t" 
-               << v.z << ",\t" 
-               << v.w << "]" << std::endl;
-}
+//TODO: need one for std::vector<>
 
 #endif

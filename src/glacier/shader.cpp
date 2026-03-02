@@ -105,7 +105,7 @@ void Shader::generate_imgui_editor()
 
 	if (ImGui::Button("Recompile Shader"))
 	{
-		std::cout << "Recompiling shader...." << std::endl;
+		spdlog::info("Recompiling shader....");
 
 		//save off old uniforms first
 		std::vector<uniform_descriptor> old_uniforms = uniform_list;
@@ -188,7 +188,7 @@ Shader::Shader(std::string _vertex_path, std::string _fragment_path) : vertex_pa
 
 bool Shader::compile_shader_program()
 {
-	std::cout << "Attempting to compile v:" << vertex_path << " f:" << fragment_path << std::endl;
+	spdlog::info("Attempting to compile v: {} f: {}", vertex_path, fragment_path);
 
 	// 1. retrieve the vertex/fragment source code from filePath
 	std::string vertexCode;
@@ -216,7 +216,7 @@ bool Shader::compile_shader_program()
 	}
 	catch (std::ifstream::failure e)
 	{
-		std::cout << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ" << std::endl;
+		spdlog::error("SHADER::FILE_NOT_SUCCESFULLY_READ");
 		return false;
 	}
 	const char* vShaderCode = vertexCode.c_str();
@@ -236,7 +236,7 @@ bool Shader::compile_shader_program()
 	if (!success)
 	{
 		glGetShaderInfoLog(vertex, 512, NULL, infoLog);
-		std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
+		spdlog::error("SHADER::VERTEX::COMPILATION_FAILED:\n{}", infoLog);
 		return false;
 	};
 
@@ -249,7 +249,7 @@ bool Shader::compile_shader_program()
 	if (!success)
 	{
 		glGetShaderInfoLog(fragment, 512, NULL, infoLog);
-		std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
+		spdlog::error("ERROR::SHADER::FRAGMENT::COMPILATION_FAILED:\n{}", infoLog);
 		return false;
 	};
 
@@ -263,7 +263,7 @@ bool Shader::compile_shader_program()
 	if (!success)
 	{
 		glGetProgramInfoLog(ID, 512, NULL, infoLog);
-		std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
+		spdlog::error("SHADER::PROGRAM::LINKING_FAILED:\n{}", infoLog);
 		return false;
 	}
 
@@ -290,7 +290,7 @@ void Shader::generate_uniform_table()
 	GLint uniform_count = 0;
 	glGetProgramiv(ID, GL_ACTIVE_UNIFORMS, &uniform_count);
 
-	std::cout << "# Active uniforms: " << uniform_count << "\n";
+	spdlog::debug("# Active uniforms: {}", uniform_count);
 
 	for (int i = 0; i < uniform_count; i++)
 	{
@@ -300,7 +300,7 @@ void Shader::generate_uniform_table()
 		GLenum gl_type;
 		glGetActiveUniform(ID, i, 20, &actual_length, &actual_size, &gl_type, info_string);
 		std::string uniform_name = std::string(info_string, actual_length);
-		std::cout << "Uniform - " << uniform_name << "\tsize - " << actual_size << "\ttype - " << gl_type << "\n";
+		spdlog::debug("Uniform - {}\tsize- {}\ttype - {}", uniform_name, actual_size, gl_type);
 
 		struct uniform_descriptor desc = { gl_type, uniform_name, actual_size /*intentionally skip local variable initialization*/ };
 
