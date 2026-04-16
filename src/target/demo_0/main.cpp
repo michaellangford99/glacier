@@ -11,6 +11,7 @@
 #include <glad/glad.h> 
 #include <GLFW/glfw3.h>
 #include <iostream>
+#include <iomanip>
 
 #include "camera.h"
 #include "triangles.h"
@@ -266,6 +267,11 @@ public:
 		for (auto& cmd : translucent_draw_buffer)
 		{
 			cmd.e->draw(cmd.parent_world, camera);
+
+			std::stringstream ss;
+			ss << cmd.e->position;
+
+			debug_draw::get_instance()->draw_string(ss.str(), cmd.e->position, {1, 0, 0, 0.5}, camera);
 		}
 
 		//restore? idk.
@@ -407,6 +413,15 @@ public:
 //
 			//	fullscreen_quad->draw();
 			//}
+
+			//debug_draw::get_instance()->draw_string("TX [0]", root->children.back()->position, {1, 1, 0, 0.8}, camera);
+
+			std::stringstream ss;
+			ss << "Cam: [E: " << std::fixed << std::setprecision(2) << camera.position.x 
+			 	   << ", N: " << std::fixed << std::setprecision(2) << camera.position.y 
+			 	   << ", U: " << std::fixed << std::setprecision(2) << camera.position.z << "] km.";
+
+			debug_draw::get_instance()->draw_string(ss.str(), {10, 10}, {0.7, 0.7, 0.7, 0.7});
 
 			debug_draw::get_instance()->draw_queue(camera);
 			debug_draw::get_instance()->clear_queue();
